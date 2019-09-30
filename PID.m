@@ -1,4 +1,5 @@
 classdef PID < handle
+    % klasa implementuj¹ca regulator PID
     properties
         K=1;
         Ti=999999;

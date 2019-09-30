@@ -1,4 +1,5 @@
 classdef DMC < handle
+    % klasa reprezentuj¹ca regulator DMC
     properties
         s;
         lambda = 100;

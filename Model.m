@@ -27,7 +27,7 @@ classdef Model < handle
             obj.x(obj.k+1, :) = obj.x(obj.k, :);
             for i=1:obj.params.subdiv
                 obj.x(obj.k+1,:) = obj.x(obj.k+1,:)+...
-                    dx(obj.x(obj.k+1,:), u, obj.params)' * obj.params.Ts;
+                    dx(obj.x(obj.k+1,:), u, obj.params)' * obj.params.Ts/obj.params.subdiv;
             end
             obj.y(obj.k+1) = root_h(obj.x(obj.k+1,:),obj.y(obj.k), obj.params);
             y = obj.y(obj.k+1);
