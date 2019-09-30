@@ -34,6 +34,8 @@ for i=1:length(op_points)
     models(i) = Model(Yzad);
     models(i).y(1)=op_points(i);
 end
+params = ModelParams();
+u_nominal = params.u_nominal;
 u = repmat(u_nominal, [sim_len, 1]);
 
 model = Model(Yzad);
@@ -43,7 +45,7 @@ for k=1:sim_len-1
     % modelu zawieraj¹cego historiê stanu modelu (zmienne stanu, wyjœcia i
     % sterowania) oraz trajektoriê zadan¹
     u(k,1) = fc.get_steering(model);
-    u(k,1) = min(max(u(k,1),u1_min),u1_max);
+    u(k,1) = min(max(u(k,1),params.u1_min),params.u1_max);
     model.update(u(k,:));
 end
 figure
