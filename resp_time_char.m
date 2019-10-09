@@ -16,5 +16,5 @@ u = repmat(params.u_nominal, [samples, 1]);
 u(:,1) = [1:samples]/samples*(params.u1_max-params.u1_min)+params.u1_min;
 time = zeros(samples,1);
 for i=1:samples
-    time(i)=response_time(u(i,:), 0.1, 0.95, params);
+    time(i)=response_time(u(i,:), step_size, params, 1-exp(-1));
 end
