@@ -1,4 +1,4 @@
-classdef ModelParams
+classdef ModelParams < handle
     properties
         u3_nominal = 16.6;
         u2_nominal = 0.55;
@@ -36,7 +36,29 @@ classdef ModelParams
         u3_min = 10;
         u3_max = 20;
 
-        Ts = 1;
+        Ts = 10;
         subdiv = 1;
+    end
+    methods
+        function obj = randomize(obj, amplitude)
+            obj.V = obj.V*((rand-0.5)*amplitude+1);
+            obj.Wa1 = obj.Wa1 *((rand-0.5)*amplitude+1);
+            obj.Wa2 = obj.Wa2 *((rand-0.5)*amplitude+1);
+            obj.Wa3 = obj.Wa3 *((rand-0.5)*amplitude+1);
+            obj.Wb1 = obj.Wb1 *((rand-0.5)*amplitude+1);
+            obj.Wb2 = obj.Wb2 *((rand-0.5)*amplitude+1);
+            obj.Wb3 = obj.Wb3 *((rand-0.5)*amplitude+1);
+            obj.pK1 = obj.pK1 *((rand-0.5)*amplitude+1);
+            obj.pK2 = obj.pK2 *((rand-0.5)*amplitude+1);
+%             obj.V = obj.V*(amplitude+1);
+%             obj.Wa1 = obj.Wa1 *(-amplitude+1);
+%             obj.Wa2 = obj.Wa2 *(amplitude+1);
+%             obj.Wa3 = obj.Wa3 *(-amplitude+1);
+%             obj.Wb1 = obj.Wb1 *(amplitude+1);
+%             obj.Wb2 = obj.Wb2 *(-amplitude+1);
+%             obj.Wb3 = obj.Wb3 *(amplitude+1);
+%             obj.pK1 = obj.pK1 *(-amplitude+1);
+%             obj.pK2 = obj.pK2 *(amplitude+1);
+        end
     end
 end

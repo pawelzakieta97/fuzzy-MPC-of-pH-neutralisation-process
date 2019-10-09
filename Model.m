@@ -1,21 +1,25 @@
 classdef Model < handle
     properties
-        x = zeros(2000,2);
-        y = zeros(2000,1);
-        u = zeros(2000,3);
+        x = zeros(200,2);
+        y = zeros(200,1);
+        u = zeros(200,3);
         k=1;
-        Yzad = [];
+        Ysp = [];
         params;
     end
     methods
-        function obj=Model(Yzad)
-            obj.params = ModelParams();
-            obj.x = repmat(obj.params.x_nominal, [2000,1]);
-            obj.y = ones(2000,1)*obj.params.y_nominal;
-            obj.u = repmat(obj.params.u_nominal, [2000,1]);
+        function obj=Model(Ysp, params)
+            if nargin<2
+                obj.params = ModelParams();
+            else
+                obj.params = params;
+            end
+            obj.x = repmat(obj.params.x_nominal, [200,1]);
+            obj.y = ones(200,1)*obj.params.y_nominal;
+            obj.u = repmat(obj.params.u_nominal, [200,1]);
             obj.k=1;
             if nargin>0
-                obj.Yzad = Yzad;
+                obj.Ysp = Ysp;
             end
         end
         function y=update(obj, u)
