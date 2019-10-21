@@ -1,0 +1,17 @@
+function y = simulation(model, controller)
+if nargin<3
+    params = ModelParams();
+end
+sim_len = length(model.Ysp);
+u_nominal = params.u_nominal;
+u = repmat(u_nominal, [sim_len, 1]);
+for k=1:sim_len-1
+    % regualtor zwraca wartoœæ sygna³u steruj¹cego na podstawie obiektu
+    % modelu zawieraj¹cego historiê stanu obiektu (zmienne stanu, wyjœcia i
+    % sterowania) oraz trajektoriê zadan¹
+    u(k,1) = controller.get_steering(model);
+    u(k,1) = min(max(u(k,1),params.u1_min),params.u1_max);
+    cost = cost + (error_multiplier(k)*(model.y(model.k)-Ysp(k)))^2 + steering_cost*(u(k,1)-prev_u)^2;
+    prev_u = u(k,1);
+    model.update(u(k,:));
+end

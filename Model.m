@@ -14,9 +14,9 @@ classdef Model < handle
             else
                 obj.params = params;
             end
-            obj.x = repmat(obj.params.x_nominal, [200,1]);
-            obj.y = ones(200,1)*obj.params.y_nominal;
-            obj.u = repmat(obj.params.u_nominal, [200,1]);
+            obj.x = repmat(obj.params.x_nominal, [length(Ysp),1]);
+            obj.y = ones(length(Ysp),1)*obj.params.y_nominal;
+            obj.u = repmat(obj.params.u_nominal, [length(Ysp),1]);
             obj.k=1;
             if nargin>0
                 obj.Ysp = Ysp;
@@ -36,6 +36,19 @@ classdef Model < handle
             obj.y(obj.k+1) = root_h(obj.x(obj.k+1,:),obj.y(obj.k), obj.params);
             y = obj.y(obj.k+1);
             obj.k = obj.k+1;
+        end
+        function obj=plot(obj)
+            figure
+            subplot(2,1,1);
+            stairs(obj.Ysp, '--');
+            hold on;
+            plot(obj.y(1:length(obj.Ysp)));
+            legend('setpoint', 'output', 'Location','southeast');
+            hold off;
+
+            subplot(2,1,2); 
+            plot(obj.u(:,1));
+            legend('u1');
         end
     end
 end
