@@ -5,7 +5,19 @@ end
 if nargin<3
     params = ModelParams();
 end
-[~, s] = step(u0, step_size, 200, params);
+if u0(1)>17
+    a=1;
+end
+%[~, s] = step(u0, step_size, 200, params);
 [~, y_stat] = static_output(u0+[0, step_size, 0], params);
+model = Model([], params);
+[x0,y0] = static_output(u0);
+model.x(1,:)=x0;
+model.y(1)=y0;
+if step_size>0
+    while model.y(model.k)<y_stat
+        model.update(u0+amplitude);
+    end
+end
 [~, idx] = min(abs(s-(y_stat-(y_stat-s(1))*(1-fraction))));
 time = idx*params.Ts;

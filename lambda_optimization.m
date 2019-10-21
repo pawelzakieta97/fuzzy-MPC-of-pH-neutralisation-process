@@ -1,7 +1,4 @@
 addpath('./membership_functions/');
-sim_len =200;
-Ysp = [ones(50,1)*7; ones(50,1)*3; ones(50,1)*9; ones(50,1)*7];
-
 op_points = [3, 5, 7, 8.5,10];
 
 D = 50;
@@ -30,8 +27,6 @@ for i=1:length(op_points)
     controllers(i)=DMC(s,N,Nu,D,lambda_init(i), op_points(i), step_size);
 end
 params = ModelParams();
-u_nominal = params.u_nominal;
-u = repmat(u_nominal, [sim_len, 1]);
 
 fc = FuzzyController(controllers, @normal);
 

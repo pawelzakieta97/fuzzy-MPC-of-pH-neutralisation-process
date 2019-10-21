@@ -5,7 +5,7 @@ function signal = random_signal(length, T, range, seed)
     k = 0;
     signal = [];
     while k<length
-        len = int16(randn*T/2+T);
+        len = int16(randn*T/4+T);
         signal = [signal; ones(len,1) * (rand*(range(2)-range(1))+range(1))];
         k = k + len;
     end

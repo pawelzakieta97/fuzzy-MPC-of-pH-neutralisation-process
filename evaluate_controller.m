@@ -1,6 +1,7 @@
 function cost = evaluate_controller(lambdas, fuzzy_controller, randomization_amp, normalize_cost, show_plots)
 sim_len = 200;
-Ysp = [ones(50,1)*7; ones(50,1)*3; ones(50,1)*9; ones(50,1)*7];
+params = ModelParams();
+Ysp = random_signal(300,20,[params.y_min, params.y_max], 1);
 step_size = 1;
 error_multiplier = ones(sim_len, 1);
 if normalize_cost
