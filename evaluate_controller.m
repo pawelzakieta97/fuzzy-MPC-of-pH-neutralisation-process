@@ -24,7 +24,7 @@ cost = 0;
 u_prev = model.params.u1_nominal;
 for k=2:length(model.y)
     error = abs(model.y(k)-model.Ysp(k));
-    steering_change = abs(model.u(k,1)-u_prev);;
+    steering_change = abs(model.u(k,1)-u_prev);
     u_prev = model.u(k,1);
     cost = cost + ...
         (error^2 + ...
