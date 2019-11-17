@@ -1,4 +1,4 @@
-function weight = normal_sp(controller, model)
+function weight = normal_sp(reference_model, current_model)
 
-weight = gaussmf(controller.op_point, [1,model.Ysp(model.k)]);
+weight = gaussmf(reference_model.op_point, [1,current_model.Ysp(current_model.k)]);
 end
