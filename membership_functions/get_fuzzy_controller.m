@@ -1,10 +1,12 @@
-function fc = get_fuzzy_controller(op_points, lambdas, step_sizes, membership_fun)
+function fc = get_fuzzy_controller(op_points, lambdas, step_sizes, membership_fun, output_limit)
 clear controllers;
 
 D = 50;
 N = D;
 Nu = 2;
-
+if nargin<5
+    output_limit = [0,0];
+end
 if length(step_sizes) == 1
     step_size = step_sizes(1);
     
@@ -25,7 +27,7 @@ if length(step_sizes) == 1
 
         % utworzenie listy regulatorów dmc na podstawie wygenerowanych
         % odpowiedzi skokowych
-        controllers(op_point_idx)=DMC(s,N,Nu,D,lambdas(op_point_idx), op_points(op_point_idx), step_size);
+        controllers(op_point_idx)=DMC(s,N,Nu,D,lambdas(op_point_idx), op_points(op_point_idx), step_size, output_limit);
     end
     fc = FuzzyController(controllers, membership_fun);
 else

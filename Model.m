@@ -44,11 +44,13 @@ classdef Model < handle
             hold on;
             plot(obj.y(1:length(obj.Ysp)));
             legend('setpoint', 'output', 'Location','southeast');
+            xlabel('t');
             hold off;
 
             subplot(2,1,2); 
-            plot(obj.u(:,1));
+            stairs(obj.u(:,1));
             legend('u1');
+            xlabel('t');
         end
     end
 end

@@ -22,7 +22,7 @@ classdef DMC < handle
     methods
         function obj=DMC(s, N, Nu, D, lambda, op_point, step_size, output_limit)
             if size(s,2) == 1
-                s = [s,zeros(length(s),1)];
+                s = [s,zeros()]
             end
             obj.params = ModelParams();
             obj.s = s;
