@@ -10,9 +10,11 @@ op_point = 7;
 params = ModelParams();
 output_limit = [params.u1_min, params.u1_max];
 [~, s] = SLinear_step(7, 1, 100);
+s = s(2:end)-s(1);
+s = s/step_size;
 s = s';
 step_model = StepRespModel(s, step_size, ModelParams());
-dmc = DMC(step_model,N,Nu,D,lambda);
+dmc = DMC(s, N, Nu, D, lambda, op_point, step_size, output_limit);
 params = ModelParams();
 
 model = SLinear_simulation(dmc, generate_setpoint());

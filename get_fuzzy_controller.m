@@ -1,5 +1,6 @@
 function [fc, fm] = get_fuzzy_controller(op_points, lambdas, step_sizes, membership_fun)
 clear controllers;
+clear diffeq_models;
 
 D = 80;
 N = D;
@@ -15,20 +16,20 @@ if length(step_sizes) == 1
         % wyznaczenie odpowiedzi skokowych z danego punktu pracy dla sygna³u
         % steruj¹cego u1 i zak³ócenia u2
         [~, step1, u1] = step(u0, [step_size,0,0], D+1);
-        [~, step2] = step(u0, [0,step_size,0], D+1);
+        [~, step2, ~] = step(u0, [0,step_size,0], D+1);
         s = zeros(D+1, 2);
         s(:,1)=step1;
         s(:,2)=step2;
 
         % utworzenie listy regulatorów dmc na podstawie wygenerowanych
         % odpowiedzi skokowych
-        lin_model = LinearModel(u1, s1, 1,1,)
-        linear_model = StepRespModel(s, step_size, ModelParams());
-        controllers(op_point_idx)=DMC(linear_model,N,Nu,D,lambdas(op_point_idx));
-        linear_models(op_point_idx) = linear_model;
+        diff_eq_model = get_local_DEM(op_points(op_point_idx), 1);
+        step_model = StepRespModel(s, step_size, ModelParams());
+        controllers(op_point_idx)=DMC(step_model,N,Nu,D,lambdas(op_point_idx));
+        diffeq_models(op_point_idx) = diff_eq_model;
     end
     fc = FuzzyController(controllers, membership_fun);
-    fm = FuzzyModel(linear_models, membership_fun);
+    fm = FuzzyModel(diffeq_models, membership_fun);
 else
     for step_idx=1:len(step_sizes)
         step_size = step_sizes(step_idx);

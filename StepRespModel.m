@@ -23,6 +23,9 @@ classdef StepRespModel < handle
             obj.op_point = step_responses(1,1);
             obj.step_size = step_size;
             obj.amplification = (step_responses(length(step_responses), 1) - step_responses(1,1))/obj.step_size;
+            if size(step_responses, 2) == 1
+                step_responses = [step_responses, step_responses*0];
+            end
             obj.s = (step_responses(2:end, :)-step_responses(1, :))/obj.step_size;
             obj.y = ones(500,1)*obj.params.y_nominal;
             obj.u = repmat(obj.params.u_nominal, [500,1]);

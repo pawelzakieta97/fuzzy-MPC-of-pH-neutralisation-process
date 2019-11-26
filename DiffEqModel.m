@@ -1,7 +1,8 @@
-classdef LinearModel < handle
+classdef DiffEqModel < handle
     properties
         s = [];
         op_point;
+        op_point_u;
         params;
         a;
         b;
@@ -11,13 +12,14 @@ classdef LinearModel < handle
         u;
         na;
         nb;
-        D = 50;
+        D = 80;
         Mp1; 
         Mp2;
     end
     methods
-        function obj=LinearModel(u,y,nb,na,s)
+        function obj=DiffEqModel(u,y,nb,na)
             obj.op_point = mean(y);
+            obj.op_point_u = mean(u);
             obj.nb = nb;
             obj.na = na;
             u = u(1:min(length(u), length(y)));
@@ -36,11 +38,9 @@ classdef LinearModel < handle
             obj.params = ModelParams();
             obj.y = obj.params.y_nominal*ones(500,1);
             obj.u = obj.params.u1_nominal*ones(500,1);
-            if nargin<5
-            end
         end
         function y=update(obj, u)
-            obj.u(obj.k) = u;
+            obj.u(obj.k) = u(1);
             obj.k = obj.k+1;
             obj.y(obj.k) = obj.a' * obj.y(obj.k-1:-1:obj.k-obj.na) + obj.b * obj.u(obj.k-1:-1:obj.k-obj.nb) + obj.const;
             y = obj.y(obj.k);
@@ -98,7 +98,9 @@ classdef LinearModel < handle
             obj.y(1) = obj.op_point;
             u0 = obj.static_steering(obj.op_point);
             for k=1:samples
-                obj.update(u0+)
+                obj.update(u0+1);
+            end
+            s = obj.y;
         end
     end
 end
