@@ -20,21 +20,19 @@ classdef DMC < handle
         
     end
     methods
-        function obj=DMC(s, N, Nu, D, lambda, op_point, step_size, output_limit)
-            if size(s,2) == 1
-                s = [s,zeros(length(s),1)];
-            end
+        function obj=DMC(linear_model, N, Nu, D, lambda)
             obj.params = ModelParams();
-            obj.s = s;
+            obj.linear_model = linear_model;
+            % obj.s = s;
             obj.N = N;
             obj.Nu = Nu; 
             obj.D = D;
             obj.lambda = lambda;
-            obj.op_point = op_point;
-            obj.step_size = step_size;
-            obj.M = generateM(N, Nu, D, s(:,1));
-            obj.Mp1 = generateMp(N, D, s(:,1));
-            obj.Mp2 = generateMp(N, D, s(:,2));
+            % obj.op_point = op_point;
+            % obj.step_size = step_size;
+            obj.M = generateM(N, Nu, D, linear_model.s(:,1));
+            obj.Mp1 = generateMp(N, D, linear_model.s(:,1));
+            obj.Mp2 = generateMp(N, D, linear_model.s(:,2));
             obj.K = (obj.M' * obj.M + lambda * eye(Nu,Nu)) \ obj.M';
             obj.KMp1 = obj.K(1,:)*obj.Mp1;
             obj.KMp2 = obj.K(1,:)*obj.Mp2;

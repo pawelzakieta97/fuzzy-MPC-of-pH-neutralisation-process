@@ -23,19 +23,21 @@ classdef Model < handle
             end
         end
         function y=update(obj, u)
-            obj.u(obj.k, :) = u;
-            
-            % obliczenie nowej wartoœci zmiennych stanu za pomoc¹ metody
-            % Eulera. Zmienna subdiv zwiêksza rozdzielczoœæ symulacji
-            % wzglêdem okresu próbkowania
-            obj.x(obj.k+1, :) = obj.x(obj.k, :);
-            for i=1:obj.params.subdiv
-                obj.x(obj.k+1,:) = obj.x(obj.k+1,:)+...
-                    dx(obj.x(obj.k+1,:), u, obj.params)' * obj.params.Ts/obj.params.subdiv;
+            for j=1:size(u,1)
+                obj.u(obj.k, :) = u(j,:);
+
+                % obliczenie nowej wartoœci zmiennych stanu za pomoc¹ metody
+                % Eulera. Zmienna subdiv zwiêksza rozdzielczoœæ symulacji
+                % wzglêdem okresu próbkowania
+                obj.x(obj.k+1, :) = obj.x(obj.k, :);
+                for i=1:obj.params.subdiv
+                    obj.x(obj.k+1,:) = obj.x(obj.k+1,:)+...
+                        dx(obj.x(obj.k+1,:), u(j,:), obj.params)' * obj.params.Ts/obj.params.subdiv;
+                end
+                obj.y(obj.k+1) = root_h(obj.x(obj.k+1,:),obj.y(obj.k), obj.params);
+                y = obj.y(obj.k+1);
+                obj.k = obj.k+1;
             end
-            obj.y(obj.k+1) = root_h(obj.x(obj.k+1,:),obj.y(obj.k), obj.params);
-            y = obj.y(obj.k+1);
-            obj.k = obj.k+1;
         end
         function obj=plot(obj)
             figure
@@ -51,6 +53,19 @@ classdef Model < handle
             stairs(obj.u(:,1));
             legend('u1');
             xlabel('t');
+        end
+        function obj=plot_horizontal(obj)
+            figure
+            subplot(1,2,1);
+            stairs(obj.Ysp, '--');
+            hold on;
+            plot(obj.y(1:length(obj.Ysp)));
+            legend('setpoint', 'output', 'Location','southeast');
+            hold off;
+
+            subplot(1,2,2); 
+            plot(obj.u(:,1));
+            legend('u1');
         end
     end
 end

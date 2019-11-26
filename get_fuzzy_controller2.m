@@ -55,3 +55,6 @@ else
         fc = FuzzyController(controllers, membership_fun);
     end
 end
+if length(lambdas)==1
+    fc = controllers(1);
+end
