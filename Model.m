@@ -77,7 +77,7 @@ classdef Model < handle
             hold off;
 
             subplot(1,2,2); 
-            plot(obj.u(:,1));
+            stairs(obj.u(:,1));
             legend('u1');
         end
     end

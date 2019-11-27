@@ -4,11 +4,20 @@ classdef SLinearModel < Model
     
     properties
         u_in;
+        u_in_min;
+        u_in_max;
     end
     methods
         function obj=SLinearModel(Ysp, params)
+            if nargin<2
+                params = ModelParams();
+            end
             obj = obj@Model(Ysp, params);
             obj.u_in = obj.params.y_nominal*ones(length(Ysp),1);
+            [~, y_min] = static_output([obj.params.u1_min, obj.params.u2_nominal, obj.params.u3_nominal]);
+            [~, y_max] = static_output([obj.params.u1_max, obj.params.u2_nominal, obj.params.u3_nominal]);
+            obj.u_in_min = y_min;
+            obj.u_in_max = y_max;
         end
         function y = update(obj, u_in)
             obj.u_in(obj.k) = u_in;
@@ -30,6 +39,21 @@ classdef SLinearModel < Model
                 up = [up;repmat(up(size(up,1)), [length,1])];
                 up = up(1:length);
             end
+        end
+        function obj=plot(obj)
+            figure
+            subplot(2,1,1);
+            stairs(obj.Ysp, '--');
+            hold on;
+            plot(obj.y(1:length(obj.Ysp)));
+            legend('setpoint', 'output', 'Location','southeast');
+            xlabel('t');
+            hold off;
+
+            subplot(2,1,2); 
+            stairs(obj.u_in);
+            legend('u_{in}');
+            xlabel('t');
         end
     end
 end
