@@ -4,7 +4,7 @@ op_points = [3, 5, 7, 8.5, 10];
 D = 50;
 N = D;
 Nu = 2;
-lambda = 1;
+lambda = 0.02;
 step_size = 0.1;
 op_point = 7;
 params = ModelParams();
@@ -14,7 +14,8 @@ s = s';
 step_model = StepRespModel(s, step_size, ModelParams());
 dmc = DMC(step_model,N,Nu,D,lambda);
 params = ModelParams();
-
-model = SLinear_simulation(dmc, generate_setpoint());
+Ysp = generate_setpoint();
+% Ysp = ones(400,1)*8;
+model = SLinear_simulation(dmc, Ysp);
 
 model.plot()

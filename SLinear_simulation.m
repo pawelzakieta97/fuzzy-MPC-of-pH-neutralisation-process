@@ -11,6 +11,6 @@ for k=1:sim_len-1
     % modelu zawieraj¹cego historiê stanu obiektu (zmienne stanu, wyjœcia i
     % sterowania) oraz trajektoriê zadan¹
     u(k) = controller.get_steering(model);
-    u(k) = min(max(u(k,1),model.params.u1_min),model.params.u1_max);
+    % u(k) = min(max(u(k,1),model.params.u1_min),model.params.u1_max);
     model.update(u(k,:));
 end
