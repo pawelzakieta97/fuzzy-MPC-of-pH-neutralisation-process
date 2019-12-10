@@ -29,6 +29,7 @@ classdef DiffEqModel < handle
             for k=max(nb, na)+1:sim_len
                 M(k,:)=[y(k-1:-1:k-na), u(k-1:-1:k-nb), 1];
             end
+            
             M = M(max(na, nb)+1:end, :);
             y_real = y(max(na, nb)+1:end);
             w=(M'*M)^(-1)*M'*y_real;
@@ -38,6 +39,8 @@ classdef DiffEqModel < handle
             obj.params = ModelParams();
             obj.y = obj.params.y_nominal*ones(500,1);
             obj.u = obj.params.u1_nominal*ones(500,1);
+            obj.s = obj.step(100);
+            
         end
         function y=update(obj, u)
             obj.u(obj.k) = u(1);
@@ -100,7 +103,8 @@ classdef DiffEqModel < handle
             for k=1:samples
                 obj.update(u0+1);
             end
-            s = obj.y;
+            s = obj.y(1:samples);
+            s = s-s(1);
         end
     end
 end

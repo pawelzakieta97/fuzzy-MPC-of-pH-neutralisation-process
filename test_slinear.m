@@ -15,8 +15,13 @@ step_model = StepRespModel(s, step_size, ModelParams());
 dmc = DMC(step_model,N,Nu,D,lambda);
 params = ModelParams();
 Ysp = generate_setpoint();
-% Ysp = 7+(Ysp-7)/10;
-% Ysp = ones(400,1)*8;
 model = SLinear_simulation(dmc, Ysp);
-
+du = model.u_in(1:500)-[model.u_in(1);model.u_in(1:499)];
+du_exp = zeros(499,1);
+% for k=1:500
+%     du_exp(k) = expected_step(model, k);
+% end
+% stairs(du);
+% hold on;
+% stairs(du_exp);
 model.plot()

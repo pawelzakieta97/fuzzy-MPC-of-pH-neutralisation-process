@@ -1,13 +1,15 @@
 classdef StepRespModel < handle
     properties
         s = [];
+        s1;
+        s2;
         op_point;
         step_size;
         params;
         k=1;
         y;
         u;
-        D = 50;
+        D = 80;
         recent_u;
         Mp1; 
         Mp2;
@@ -27,6 +29,8 @@ classdef StepRespModel < handle
                 step_responses = [step_responses, step_responses*0];
             end
             obj.s = (step_responses(2:end, :)-step_responses(1, :))/obj.step_size;
+            obj.s1 = obj.s(:,1);
+            obj.s2 = obj.s(:,2);
             obj.y = ones(500,1)*obj.params.y_nominal;
             obj.u = repmat(obj.params.u_nominal, [500,1]);
             obj.recent_u = repmat(obj.params.u_nominal, [obj.D,1]);

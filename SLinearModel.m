@@ -20,7 +20,7 @@ classdef SLinearModel < Model
             obj.u_in_max = y_max;
         end
         function y = update(obj, u_in)
-            obj.u_in(obj.k) = u_in;
+            obj.u_in(obj.k) = max(min(u_in, obj.u_in_max), obj.u_in_min);
             y_static = u_in;
             u = static_inv(y_static, 1);
             update@Model(obj, u);
@@ -32,6 +32,9 @@ classdef SLinearModel < Model
             % (w kolejnoœci od najpoŸniejszego do najwczeœniejszego)
             % zwraca D wartoœci, uzupe³nia wartoœciami
             % nominalnymi
+            if nargin<1
+                length = 100;
+            end
             if obj.k == 1
                 up = repmat(obj.u_in(1), [length,1]);
             else

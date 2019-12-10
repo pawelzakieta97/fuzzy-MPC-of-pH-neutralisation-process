@@ -28,7 +28,7 @@ if length(step_sizes) == 1
         controllers(op_point_idx)=DMC(step_model,N,Nu,D,lambdas(op_point_idx));
         diffeq_models(op_point_idx) = diff_eq_model;
     end
-    fc = FuzzyController(controllers, membership_fun);
+    fc = FuzzyController(controllers, membership_fun, true);
     fm = FuzzyModel(diffeq_models, membership_fun);
 else
     for step_idx=1:len(step_sizes)
@@ -42,7 +42,7 @@ else
             % steruj¹cego u1 i zak³ócenia u2
             [~, step1] = step(u0, [step_size,0,0], D+1);
             step1 = (step1(2:D+1)-step1(1))/step_size;
-            [~, step2] = step(u0, [0,step_size,0], D+1);
+            [~, step2] = step(u0, [0,0.1,0], D+1);
             step2 = (step2(2:D+1)-step2(1))/step_size;
             s = zeros(D, 2);
             s(:,1)=step1;
