@@ -80,6 +80,13 @@ classdef Model < handle
             stairs(obj.u(:,1));
             legend('u1');
         end
+        function obj = copy_state(obj, reference_model)
+            obj.x = reference_model.x;
+            obj.y = reference_model.y;
+            obj.u = reference_model.u;
+            obj.k = reference_model.k;
+            
+        end
     end
 end
             

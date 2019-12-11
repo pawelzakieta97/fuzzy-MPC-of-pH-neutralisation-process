@@ -25,7 +25,7 @@ classdef ModelParams < handle
 
         y_nominal = 7.0;
         y_max = 10.0;
-        y_min = 5;
+        y_min = 3.0;
 
         u1_min = 0;
         u1_max = 30;

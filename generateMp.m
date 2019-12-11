@@ -1,5 +1,5 @@
 function Mp = generateMp(N, D, s)
-K = s(D);
+K = s(D-1);
 s(D:N+D) = K;
 Mp = zeros(N, D-1);
 for row = 1:N

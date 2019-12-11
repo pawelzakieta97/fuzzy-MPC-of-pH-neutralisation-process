@@ -7,7 +7,7 @@ N = D;
 Nu = 2;
 
 if nargin < 5
-    numeric = true;
+    numeric = false;
 end
 if length(step_sizes) == 1
     step_size = step_sizes(1);

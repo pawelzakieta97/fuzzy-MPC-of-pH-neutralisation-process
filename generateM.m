@@ -1,5 +1,5 @@
 function M=generateM(N, Nu, D, s)
-K = s(D);
+K = s(D-1);
 s(D:N) = K;
 M = zeros(N, Nu);
 for row = 1:N
