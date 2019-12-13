@@ -1,3 +1,5 @@
+addpath('./membership_functions/');
+
 op_points = [3, 5, 7, 8.5, 10];
 D = 80;
 N = D;
@@ -37,5 +39,12 @@ fc.reset();
 fc.numeric = true;
 fc.use_full_steering = true;
 fc.iterations = 1;
+fc.sim_model = WienerModel();
+model_sl_nlfrc = simulation(fc, Ysp);
+
+fc.reset();
+fc.numeric = true;
+fc.use_full_steering = true;
+fc.iterations = 2;
 fc.sim_model = Model([]);
 model_n_real_model = simulation(fc, Ysp);

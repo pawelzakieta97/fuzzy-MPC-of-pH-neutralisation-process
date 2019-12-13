@@ -45,10 +45,10 @@ classdef Model < handle
             % zwraca D wartoœci, uzupe³nia wartoœciami
             % nominalnymi
             if obj.k == 1
-                up = repmat(obj.u(1,:), [length,1]);
+                up = repmat(obj.params.u_nominal, [length,1]);
             else
                 up = obj.u(obj.k-1:-1:1, :);
-                up = [up;repmat(up(size(up,1),:), [length,1])];
+                up = [up;repmat(obj.params.u_nominal, [length,1])];
                 up = up(1:length,:);
             end
         end
