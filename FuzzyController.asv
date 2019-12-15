@@ -12,6 +12,8 @@ classdef FuzzyController < handle
         planned_steering;
         iterations;
         use_full_steering;
+        multi_lin;
+        output_limit = [0,0];
     end
     methods
         function obj = FuzzyController(controllers, membership_fun, numeric, fm)
@@ -29,6 +31,7 @@ classdef FuzzyController < handle
             params = ModelParams();
             obj.iterations = 0;
             obj.use_full_steering = 0;
+            obj.multi_lin = 0;
             if nargin<3
                 numeric = true;
             end
@@ -51,7 +54,7 @@ classdef FuzzyController < handle
         function exp_step = approximate_steering(obj, model)
             exp_step = obj.main_controller.get_steering(model) - model.get_up(1);
         end
-        function u = get_steering(obj, current_model)
+        function u = get_steering_sl(obj, current_model)
             if current_model.k == 20
                 i=1
             end
@@ -63,60 +66,155 @@ classdef FuzzyController < handle
             local_lambda = 0;
             local_s = obj.controllers(1).linear_model.s1*0;
             steering = 0;
+            if obj.numeric
+                local_s = obj.get_local_s(current_model);
+            end
             for i=1:length(obj.controllers)
                 weight = obj.membership_fun(obj.controllers(i), current_model);
                 obj.weights(current_model.k, i) = weight;
                 total_weight = total_weight + weight;
-                if obj.numeric
-                    local_s = local_s + weight * obj.controllers(i).linear_model.s1;
-                    local_lambda = local_lambda + weight * obj.controllers(i).lambda;
-                else
-                    steering = steering + obj.controllers(i).get_steering(current_model)*weight;
-                    Nu = 1;
-                end
+                local_lambda = local_lambda + weight * obj.controllers(i).lambda;
             end
-            steering = steering/total_weight;
-            if obj.numeric
-                local_s = local_s/total_weight;
-                local_lambda = local_lambda/total_weight;
-                local_step_model = StepRespModel(local_s+current_model.y(current_model.k), 1, ModelParams());
-                local_DMC = DMC(local_step_model,N,Nu,D,local_lambda);
-                if obj.use_full_steering
-                    if obj.iterations == 0
+            local_lambda = local_lambda/total_weight;
+            local_step_model = StepRespModel(local_s+current_model.y(current_model.k), 1, ModelParams());
+            local_DMC = DMC(local_step_model,N,Nu,D,local_lambda);
+            if obj.use_full_steering
+                if obj.iterations == 0
+                    obj.sim_model.copy_state(current_model);
+                    for t=1:N
+                        obj.sim_model.update(obj.planned_steering(t,:));
+                    end
+                    free_response = obj.sim_model.y(current_model.k+1:current_model.k+80);
+                    steering = local_DMC.get_full_steering(current_model, free_response);
+                    obj.planned_steering(:,1) = steering(1)*ones(N,1);
+                else
+                    for iteration = 1:obj.iterations
                         obj.sim_model.copy_state(current_model);
                         for t=1:N
                             obj.sim_model.update(obj.planned_steering(t,:));
                         end
                         free_response = obj.sim_model.y(current_model.k+1:current_model.k+80);
-                        steering = local_DMC.get_full_steering(current_model, free_response);
-                        obj.planned_steering(:,1) = steering(1)*ones(N,1);
-                    else
-                        for iteration = 1:obj.iterations
-                            obj.sim_model.copy_state(current_model);
-                            for t=1:N
-                                obj.sim_model.update(obj.planned_steering(t,:));
-                            end
-                            free_response = obj.sim_model.y(current_model.k+1:current_model.k+80);
-                            planned_u1 = obj.planned_steering(1:Nu, 1);
-                            last_u = current_model.get_up(1);
-                            planned_u1 = [last_u(1); planned_u1];
-                            planned_steps = planned_u1(2:Nu+1) - planned_u1(1:Nu);
-                            steering = local_DMC.get_full_steering(current_model, free_response, planned_steps);
-                            obj.planned_steering(1:Nu, 1)= steering(1:Nu);
-                            obj.planned_steering(Nu+1:N,1) = steering(Nu)*ones(N-Nu,1);
-                        end
+                        planned_u1 = obj.planned_steering(1:Nu, 1);
+                        last_u = current_model.get_up(1);
+                        planned_u1 = [last_u(1); planned_u1];
+                        planned_steps = planned_u1(2:Nu+1) - planned_u1(1:Nu);
+                        steering = local_DMC.get_full_steering(current_model, free_response, planned_steps);
+                        obj.planned_steering(1:Nu, 1)= steering(1:Nu);
+                        obj.planned_steering(Nu+1:N,1) = steering(Nu)*ones(N-Nu,1);
                     end
-                    if obj.iterations > 0
-                        obj.planned_steering(1:Nu-1, 1)= steering(2:end);
-                        obj.planned_steering(Nu:N,1) = steering(Nu)*ones(N-Nu+1,1);
-                    end
-                else
-                    steering = local_DMC.get_steering(current_model);
                 end
+                if obj.iterations > 0
+                    obj.planned_steering(1:Nu-1, 1)= steering(2:end);
+                    obj.planned_steering(Nu:N,1) = steering(Nu)*ones(N-Nu+1,1);
+                end
+            else
+                steering = local_DMC.get_steering(current_model);
             end
             u = steering(1);
         end
-        function s = get_local_s(obj, current_model)
+        
+        function u = get_steering_ml(obj, current_model)
+            if current_model.k == 20
+                i=1
+            end
+            total_weight = 0;
+            D = obj.controllers(1).D;
+            N = obj.controllers(1).N;
+            Nu = obj.controllers(1).Nu;
+            
+            local_lambda = 0;
+            steering = 0;
+            for i=1:length(obj.controllers)
+                weight = obj.membership_fun(obj.controllers(i), current_model);
+                obj.weights(current_model.k, i) = weight;
+                total_weight = total_weight + weight;
+                local_lambda = local_lambda + weight * obj.controllers(i).lambda;
+            end
+            local_lambda = local_lambda/total_weight;
+            % local_step_models = [];%StepRespModel(local_s+current_model.y(current_model.k), 1, ModelParams());
+            
+            if obj.use_full_steering
+                if obj.iterations == 0
+                    obj.sim_model.copy_state(current_model);
+                    for t=1:N
+                        obj.sim_model.update(obj.planned_steering(t,:));
+                        local_s = obj.get_local_s(obj.sim_model);
+                        local_step_models(t) = StepRespModel(local_s+current_model.y(current_model.k), 1, ModelParams());
+                    end
+                    dmc_ml = DMC_ML(local_step_model,N,Nu,D,local_lambda);
+                    free_response = obj.sim_model.y(current_model.k+1:current_model.k+80);
+                    steering = dmc_ml.get_full_steering(current_model, free_response);
+                    obj.planned_steering(:,1) = steering(1)*ones(N,1);
+                else
+                    for iteration = 1:obj.iterations
+                        obj.sim_model.copy_state(current_model);
+                        % local_step_models = [];
+                        for t=1:N
+                            obj.sim_model.update(obj.planned_steering(t,:));
+                            local_s = obj.get_local_s(obj.sim_model);
+                            local_step_models(t) = StepRespModel(local_s+current_model.y(current_model.k), 1, ModelParams());
+                        end
+                        dmc_ml = DMC_ML(local_step_models,N,Nu,D,local_lambda);
+                        free_response = obj.sim_model.y(current_model.k+1:current_model.k+80);
+                        planned_u1 = obj.planned_steering(1:Nu, 1);
+                        last_u = current_model.get_up(1);
+                        planned_u1 = [last_u(1); planned_u1];
+                        planned_steps = planned_u1(2:Nu+1) - planned_u1(1:Nu);
+                        steering = dmc_ml.get_full_steering(current_model, free_response, planned_steps);
+                        obj.planned_steering(1:Nu, 1)= steering(1:Nu);
+                        obj.planned_steering(Nu+1:N,1) = steering(Nu)*ones(N-Nu,1);
+                    end
+                end
+                if obj.iterations > 0
+                    obj.planned_steering(1:Nu-1, 1)= steering(2:end);
+                    obj.planned_steering(Nu:N,1) = steering(Nu)*ones(N-Nu+1,1);
+                end
+            else
+                steering = local_DMC.get_steering(current_model);
+            end
+            u = steering(1);
+        end
+        
+        function u = get_steering(obj, current_model)
+
+            if obj.numeric 
+                if obj.multi_lin
+                    u = obj.get_steering_ml(current_model);
+                else
+                    u = obj.get_steering_sl(current_model);
+                end
+            else
+                u = obj.get_steering_a(current_model);
+            end
+        end
+        
+        function u = get_steering_a(obj, current_model)
+            if current_model.k == 20
+                i=1
+            end
+            total_weight = 0;
+            D = obj.controllers(1).D;
+            N = obj.controllers(1).N;
+            steering = 0;
+            for i=1:length(obj.controllers)
+                weight = obj.membership_fun(obj.controllers(i), current_model);
+                obj.weights(current_model.k, i) = weight;
+                total_weight = total_weight + weight;
+                steering = steering + obj.controllers(i).get_steering(current_model)*weight;
+                Nu = 1;
+            end
+            steering = steering/total_weight;
+            u = steering(1);
+            lower_limit = obj.output_limit(1);
+            upper_limit = obj.output_limit(2);
+            if lower_limit ~= 0 ||  upper_limit~= 0
+                lower_limit_dist = abs(current_model.y(current_model.k)-lower_limit);
+                upper_limit_dist = abs(current_model.y(current_model.k)-upper_limit);
+                max_steering = static_inv(upper_limit);
+                min_steering = static_inv(lower_limit);
+            end
+        end
+        function local_s = get_local_s(obj, current_model)
             total_weight = 0;
             local_s = obj.controllers(1).linear_model.s1*0;
             for i=1:length(obj.controllers)
@@ -127,10 +225,9 @@ classdef FuzzyController < handle
                     local_s = local_s + weight * obj.controllers(i).linear_model.s1;
                 end
             end
+            local_s = local_s/total_weight;
         end
-        function Mml = get_Mml(ss)
-            Mml = 
-        end
+        
         function obj = update_lambdas(obj, lambdas)
             for i =1:length(lambdas)
                 obj.controllers(i).set_lambda(lambdas(i));

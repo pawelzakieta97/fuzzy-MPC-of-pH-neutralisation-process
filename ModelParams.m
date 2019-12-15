@@ -5,7 +5,8 @@ classdef ModelParams < handle
         u1_nominal = 15.55;
         u_nominal = [15.55, 0.55, 16.6];
         V = 2900.0;
-
+        output_delay = 1;
+        
         x1_nominal = -0.000432;
         x2_nominal = 0.000528;
         x_nominal = [-0.000432, 0.000528];
@@ -50,15 +51,6 @@ classdef ModelParams < handle
             obj.Wb3 = obj.Wb3 *((rand-0.5)*amplitude+1);
             obj.pK1 = obj.pK1 *((rand-0.5)*amplitude+1);
             obj.pK2 = obj.pK2 *((rand-0.5)*amplitude+1);
-%             obj.V = obj.V*(amplitude+1);
-%             obj.Wa1 = obj.Wa1 *(-amplitude+1);
-%             obj.Wa2 = obj.Wa2 *(amplitude+1);
-%             obj.Wa3 = obj.Wa3 *(-amplitude+1);
-%             obj.Wb1 = obj.Wb1 *(amplitude+1);
-%             obj.Wb2 = obj.Wb2 *(-amplitude+1);
-%             obj.Wb3 = obj.Wb3 *(amplitude+1);
-%             obj.pK1 = obj.pK1 *(-amplitude+1);
-%             obj.pK2 = obj.pK2 *(amplitude+1);
         end
     end
 end

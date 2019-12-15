@@ -4,7 +4,7 @@ clear diffeq_models;
 
 D = 80;
 N = D;
-Nu = 2;
+Nu = 5;
 
 if nargin < 5
     numeric = true;

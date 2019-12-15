@@ -30,9 +30,15 @@ classdef Model < handle
                 % Eulera. Zmienna subdiv zwiêksza rozdzielczoœæ symulacji
                 % wzglêdem okresu próbkowania
                 obj.x(obj.k+1, :) = obj.x(obj.k, :);
+                u_time = obj.k-obj.params.output_delay;
+                if u_time <1
+                    u_update = obj.params.u_nominal;
+                else
+                    u_update = obj.u(u_time, :);
+                end
                 for i=1:obj.params.subdiv
                     obj.x(obj.k+1,:) = obj.x(obj.k+1,:)+...
-                        dx(obj.x(obj.k+1,:), u(j,:), obj.params)' * obj.params.Ts/obj.params.subdiv;
+                        dx(obj.x(obj.k+1,:), u_update, obj.params)' * obj.params.Ts/obj.params.subdiv;
                 end
                 obj.y(obj.k+1) = root_h(obj.x(obj.k+1,:),obj.y(obj.k), obj.params);
                 y = obj.y(obj.k+1);

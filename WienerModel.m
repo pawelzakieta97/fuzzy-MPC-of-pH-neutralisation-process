@@ -44,9 +44,9 @@ classdef WienerModel < StepRespModel
                 subplot(2,1,1);
                 stairs(model.y);
                 hold on;
-                stairs(obj.y(1:length(model.y)));
+                stairs(obj.y(1:length(model.y)), '--');
                 title('celnoœæ modelu')
-                legend('rzeczywisty przebieg', 'modelowany przebieg');
+                legend('rzeczywisty przebieg', 'modelowany przebieg', 'location', 'southeast');
                 
                 subplot(2,1,2);
                 stairs(obj.u(:,1));
