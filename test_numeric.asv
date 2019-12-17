@@ -12,7 +12,7 @@ lambda_init = [0.01, 1, 0.1, 1, 0.1];
 step_size = 0.1;
 
 [fc, fm] = get_fuzzy_controller(op_points, lambda_init, step_size, @normal);
-fc.numeric = false;
+% fc.numeric = false;
 
 Ysp = generate_setpoint();
 % Ysp = (Ysp-mean(Ysp))/20+7;
@@ -67,9 +67,9 @@ fc.multi_lin = true;
 fc.use_full_steering = true;
 fc.iterations = 1;
 fc.limit_output = true;
-fc.output_limit = [0, 8.05];
+fc.li
 fc.sim_model = WienerModel();
-model_mlrn_full_wl = simulation(fc, Ysp);
+model_mlrn_full_w = simulation(fc, Ysp);
 
 fc.reset();
 fc.numeric = true;

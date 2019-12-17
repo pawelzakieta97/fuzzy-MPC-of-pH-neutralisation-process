@@ -16,6 +16,8 @@ classdef FuzzyController < handle
         output_limit = [0,0];
         upper_bandwidth = 0.5;
         lower_bandwidth = 0.5;
+        predict_current_state = 0;
+        limit_output = 0;
     end
     methods
         function obj = FuzzyController(controllers, membership_fun, numeric, fm)
@@ -57,9 +59,6 @@ classdef FuzzyController < handle
             exp_step = obj.main_controller.get_steering(model) - model.get_up(1);
         end
         function u = get_steering_sl(obj, current_model)
-            if current_model.k == 20
-                i=1
-            end
             total_weight = 0;
             D = obj.controllers(1).D;
             N = obj.controllers(1).N;
@@ -68,11 +67,19 @@ classdef FuzzyController < handle
             local_lambda = 0;
             local_s = obj.controllers(1).linear_model.s1*0;
             steering = 0;
+            
+            predicted_model = obj.sim_model;
+            predicted_model.copy_state(current_model);
+            if obj.predict_current_state
+                for t=1:current_model.params.output_delay
+                    predicted_model.update(obj.planned_steering(t,:));
+                end
+            end
             if obj.numeric
-                local_s = obj.get_local_s(current_model);
+                local_s = obj.get_local_s(predicted_model);
             end
             for i=1:length(obj.controllers)
-                weight = obj.membership_fun(obj.controllers(i), current_model);
+                weight = obj.membership_fun(obj.controllers(i), predicted_model);
                 obj.weights(current_model.k, i) = weight;
                 total_weight = total_weight + weight;
                 local_lambda = local_lambda + weight * obj.controllers(i).lambda;
@@ -116,9 +123,6 @@ classdef FuzzyController < handle
         end
         
         function u = get_steering_ml(obj, current_model)
-            if current_model.k == 20
-                i=1
-            end
             total_weight = 0;
             D = obj.controllers(1).D;
             N = obj.controllers(1).N;
@@ -143,7 +147,7 @@ classdef FuzzyController < handle
                         local_s = obj.get_local_s(obj.sim_model);
                         local_step_models(t) = StepRespModel(local_s+current_model.y(current_model.k), 1, ModelParams());
                     end
-                    dmc_ml = DMC_ML(local_step_model,N,Nu,D,local_lambda);
+                    dmc_ml = DMC_ML(local_step_models,N,Nu,D,local_lambda);
                     free_response = obj.sim_model.y(current_model.k+1:current_model.k+80);
                     steering = dmc_ml.get_full_steering(current_model, free_response);
                     obj.planned_steering(:,1) = steering(1)*ones(N,1);
@@ -175,6 +179,7 @@ classdef FuzzyController < handle
                 steering = local_DMC.get_steering(current_model);
             end
             u = steering(1);
+            
         end
         
         function u = get_steering(obj, current_model)
@@ -188,38 +193,26 @@ classdef FuzzyController < handle
             else
                 u = obj.get_steering_a(current_model);
             end
+            obj.sim_model.copy_state(current_model);
+            for t=1:current_model.params.output_delay+1
+                obj.sim_model.update(current_model.get_up(1));
+            end
+            if obj.limit_output
+                u = obj.limit_steering(u, obj.sim_model);
+            end
         end
         
         function u = get_steering_a(obj, current_model)
-            if current_model.k == 20
-                i=1
-            end
             total_weight = 0;
-            D = obj.controllers(1).D;
-            N = obj.controllers(1).N;
             steering = 0;
             for i=1:length(obj.controllers)
                 weight = obj.membership_fun(obj.controllers(i), current_model);
                 obj.weights(current_model.k, i) = weight;
                 total_weight = total_weight + weight;
                 steering = steering + obj.controllers(i).get_steering(current_model)*weight;
-                Nu = 1;
             end
             steering = steering/total_weight;
             u = steering(1);
-            lower_limit = obj.output_limit(1);
-            upper_limit = obj.output_limit(2);
-            if lower_limit ~= 0 ||  upper_limit~= 0
-                lower_limit_dist = current_model.y(current_model.k)-lower_limit;
-                upper_limit_dist = upper_limit - current_model.y(current_model.k);
-                if upper_limit_dist<obj.upper_bandwidth || lower_limit_dist<obj.lower_bandwidth
-                    max_steering = static_inv(upper_limit);
-                    max_steering = max_steering(1);
-                    min_steering = static_inv(lower_limit);
-                    min_steering = min_steering(1);
-                    u = min(max(u, min_steering), max_steering);
-                end
-            end
         end
         function local_s = get_local_s(obj, current_model)
             total_weight = 0;
@@ -234,7 +227,21 @@ classdef FuzzyController < handle
             end
             local_s = local_s/total_weight;
         end
-        
+        function u_limited = limit_steering(obj, u, predicted_model)
+            lower_limit = obj.output_limit(1);
+            upper_limit = obj.output_limit(2);
+            lower_limit_dist = predicted_model.y(predicted_model.k)-lower_limit;
+            upper_limit_dist = upper_limit - predicted_model.y(predicted_model.k);
+            if lower_limit_dist<obj.lower_bandwidth || upper_limit_dist>obj.upper_limit_bandwidth
+                max_steering = static_inv(upper_limit);
+                max_steering = max_steering(1);
+                min_steering = static_inv(lower_limit);
+                min_steering = min_steering(1);
+                u_limited = min(max(u, min_steering), max_steering);
+            else
+                u_limited = u;
+            end
+        end
         function obj = update_lambdas(obj, lambdas)
             for i =1:length(lambdas)
                 obj.controllers(i).set_lambda(lambdas(i));
