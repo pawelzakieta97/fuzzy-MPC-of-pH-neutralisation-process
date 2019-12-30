@@ -88,13 +88,17 @@ classdef DMC_WM < handle
             y_out = current_model.y(current_model.k);
             y_in = static_inv(y_out);
             y_in = y_in(1);
-            up = current_model.get_up(obj.D);
-            dup = up(1:obj.D-1,1)-up(2:obj.D,1);
+            up = current_model.get_up(obj.D-1);
+            up = [u;up(:,1)];
+            dup = up(1:obj.D-1)-up(2:obj.D);
             free_response = y_in + obj.Mp1*dup;
-            future_output = free_response(1+obj.params.output_delay);
+            future_output_in = free_response(1+obj.params.output_delay);
+            u0 = obj.params.u_nominal;
+            u0(1) = future_output_in;
+            [~, future_output] = static_output(u0);
             lower_limit_dist = future_output-lower_limit;
             upper_limit_dist = upper_limit - future_output;
-            if lower_limit_dist<obj.lower_bandwidth || upper_limit_dist>obj.upper_bandwidth
+            if lower_limit_dist<obj.lower_bandwidth || upper_limit_dist<obj.upper_bandwidth
                 max_steering = static_inv(upper_limit);
                 max_steering = max_steering(1);
                 min_steering = static_inv(lower_limit);

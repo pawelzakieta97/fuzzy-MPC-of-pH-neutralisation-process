@@ -10,6 +10,9 @@ for k=1:sim_len-1
     % regualtor zwraca wartoœæ sygna³u steruj¹cego na podstawie obiektu
     % modelu zawieraj¹cego historiê stanu obiektu (zmienne stanu, wyjœcia i
     % sterowania) oraz trajektoriê zadan¹
+    if k==20
+        a=1;
+    end
     u(k,1) = controller.get_steering(model);
     u(k,1) = min(max(u(k,1),model.params.u1_min),model.params.u1_max);
     model.update(u(k,:));

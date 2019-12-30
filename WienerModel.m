@@ -4,6 +4,7 @@ classdef WienerModel < StepRespModel
         y_in;
         M1;
         M2;
+        Ysp;
     end
     methods
         function obj = WienerModel(params)
@@ -57,6 +58,7 @@ classdef WienerModel < StepRespModel
             obj.y = real_model.y;
             obj.u = real_model.u;
             obj.k = real_model.k;
+            obj.Ysp = real_model.Ysp;
         end
         function obj=plot(obj)
             figure
@@ -67,6 +69,10 @@ classdef WienerModel < StepRespModel
             subplot(2,1,2); 
             plot(obj.u(:,1));
             legend('u1');
+        end
+        function wm = clone(obj)
+            wm = WienerModel();
+            wm.copy_state(obj);
         end
     end
 end
