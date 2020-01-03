@@ -1,7 +1,9 @@
 addpath('./membership_functions/');
 
-op_points = [3, 5, 7, 8.5, 10];
-%op_points = [7];
+op_points = [3, 4.6, 6.4, 8, 10];
+op_points = [2.96, 4.76, 6.7, 8.19, 10]
+% op_points = [3, 5, 7, 8.5, 10];
+% op_points = [7];
 D = 80;
 N = D;
 Nu = 5;
@@ -14,6 +16,8 @@ step_size = 0.1;
 
 [fc, fm] = get_fuzzy_controller(op_points, lambda_init, step_size, @normal);
 fc.numeric = false;
+fc.set_sigmas([1,1,1,1,1]);
+% fc.set_sigmas([1.1,0.38,1.2,0.43,1.53]);
 
 Ysp = generate_setpoint();
 % Ysp = (Ysp-mean(Ysp))/20+7;

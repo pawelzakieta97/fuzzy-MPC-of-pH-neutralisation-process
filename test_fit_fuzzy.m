@@ -1,3 +1,3 @@
-[u, y] = static_char(100, 1);
+[u, y] = static_char(1000, 1);
 u1 = u(:,1);
-[op_points, sigmas] = fit_fuzzy_params(y, u1, 5);
+training_data= get_training_data(y, u1);

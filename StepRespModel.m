@@ -14,6 +14,7 @@ classdef StepRespModel < handle
         Mp1; 
         Mp2;
         amplification;
+        sigma = 1;
     end
     methods
         function obj=StepRespModel(step_responses, step_size, params)

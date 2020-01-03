@@ -85,7 +85,7 @@ classdef FuzzyController < handle
                 local_lambda = local_lambda + weight * obj.controllers(i).lambda;
             end
             local_lambda = local_lambda/total_weight;
-            local_step_model = StepRespModel(local_s+current_model.y(current_model.k), 1, ModelParams());
+            local_step_model = StepRespModel([0; local_s]+current_model.y(current_model.k), 1, ModelParams());
             local_DMC = DMC(local_step_model,N,Nu,D,local_lambda);
             if obj.use_full_steering
                 if obj.iterations == 0
@@ -94,7 +94,7 @@ classdef FuzzyController < handle
                         obj.sim_model.update(obj.planned_steering(t,:));
                     end
                     free_response = obj.sim_model.y(current_model.k+1:current_model.k+80);
-                    steering = local_DMC.get_full_steering(current_model, free_response);
+                    steering = local_DMC.get_steering(current_model, free_response);
                     obj.planned_steering(:,1) = steering(1)*ones(N,1);
                 else
                     for iteration = 1:obj.iterations
@@ -145,7 +145,7 @@ classdef FuzzyController < handle
                     for t=1:N
                         obj.sim_model.update(obj.planned_steering(t,:));
                         local_s = obj.get_local_s(obj.sim_model);
-                        local_step_models(t) = StepRespModel(local_s+current_model.y(current_model.k), 1, ModelParams());
+                        local_step_models(t) = StepRespModel([0;local_s]+current_model.y(current_model.k), 1, ModelParams());
                     end
                     dmc_ml = DMC_ML(local_step_models,N,Nu,D,local_lambda);
                     free_response = obj.sim_model.y(current_model.k+1:current_model.k+80);
@@ -245,6 +245,11 @@ classdef FuzzyController < handle
         function obj = update_lambdas(obj, lambdas)
             for i =1:length(lambdas)
                 obj.controllers(i).set_lambda(lambdas(i));
+            end
+        end
+        function obj = set_sigmas(obj, sigmas)
+            for i=1:length(obj.controllers)
+                obj.controllers(i).linear_model.sigma = sigmas(i);
             end
         end
     end

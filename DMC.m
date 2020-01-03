@@ -17,8 +17,8 @@ classdef DMC < handle
         op_point;
         step_size;
         params;
-        output_limit
-        linear_model
+        output_limit;
+        linear_model;
     end
     methods
         function obj=DMC(linear_model, N, Nu, D, lambda)
