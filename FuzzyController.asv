@@ -5,7 +5,7 @@ classdef FuzzyController < handle
         membership_fun;
         weights = [];
         main_controller;
-        numeric = 0;
+        numeric;
         step_responses;
         free_responses;
         sim_model;
@@ -18,10 +18,9 @@ classdef FuzzyController < handle
         lower_bandwidth = 0.5;
         predict_current_state = 0;
         limit_output = 0;
-        predict_lambdas = 0;
     end
     methods
-        function obj = FuzzyController(controllers, membership_fun, fm)
+        function obj = FuzzyController(controllers, membership_fun, numeric, fm)
             % konstruktor przyjmuje listê regulatorów oraz punkty pracy w
             % postaci stanu modelu. Funkcja membership_fun okreœla
             % podobieñstwo obecnej sytuacji i punktu pracy
@@ -43,6 +42,7 @@ classdef FuzzyController < handle
             if nargin >3
                 obj.sim_model = fm;
             end
+            obj.numeric = numeric;
             D = 80;
             obj.step_responses = zeros(500,D);
             obj.free_responses = zeros(500,500);
@@ -159,9 +159,6 @@ classdef FuzzyController < handle
                             obj.sim_model.update(obj.planned_steering(t,:));
                             local_s = obj.get_local_s(obj.sim_model);
                             local_step_models(t) = StepRespModel(local_s+current_model.y(current_model.k), 1, ModelParams());
-                            if obj.predict_lambdas && t<=Nu
-                                local_lambda(t,t)=obj.get_local_lambda(obj.sim_model);
-                            end
                         end
                         dmc_ml = DMC_ML(local_step_models,N,Nu,D,local_lambda);
                         free_response = obj.sim_model.y(current_model.k+1:current_model.k+80);
@@ -186,6 +183,7 @@ classdef FuzzyController < handle
         end
         
         function u = get_steering(obj, current_model)
+
             if obj.numeric 
                 if obj.multi_lin
                     u = obj.get_steering_ml(current_model);
@@ -195,11 +193,11 @@ classdef FuzzyController < handle
             else
                 u = obj.get_steering_a(current_model);
             end
+            obj.sim_model.copy_state(current_model);
+            for t=1:current_model.params.output_delay+1
+                obj.sim_model.update(current_model.get_up(1));
+            end
             if obj.limit_output
-                obj.sim_model.copy_state(current_model);
-                for t=1:current_model.params.output_delay+1
-                    obj.sim_model.update(current_model.get_up(1));
-                end
                 u = obj.limit_steering(u, obj.sim_model);
             end
         end

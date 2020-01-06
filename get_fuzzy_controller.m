@@ -1,14 +1,10 @@
-function [fc, fm] = get_fuzzy_controller(op_points, lambdas, step_sizes, membership_fun, numeric)
+function [fc, fm] = get_fuzzy_controller(op_points, lambdas, step_sizes, membership_fun, Nu)
 clear controllers;
 clear diffeq_models;
 
 D = 80;
 N = D;
-Nu = 5;
 
-if nargin < 5
-    numeric = true;
-end
 if length(step_sizes) == 1
     step_size = step_sizes(1);
     for op_point_idx=1:length(op_points)
@@ -32,7 +28,7 @@ if length(step_sizes) == 1
         diffeq_models(op_point_idx) = diff_eq_model;
     end
     fm = FuzzyModel(diffeq_models, membership_fun);
-    fc = FuzzyController(controllers, membership_fun, numeric, fm);
+    fc = FuzzyController(controllers, membership_fun, fm);
     
 else
     for step_idx=1:len(step_sizes)
