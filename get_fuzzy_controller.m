@@ -1,4 +1,4 @@
-function [fc, fm] = get_fuzzy_controller(op_points, lambdas, step_sizes, membership_fun, Nu)
+function [fc, fm] = get_fuzzy_controller(op_points, lambdas, step_sizes, membership_fun, Nu, model_idx)
 clear controllers;
 clear diffeq_models;
 
@@ -10,15 +10,22 @@ if length(step_sizes) == 1
     for op_point_idx=1:length(op_points)
         % wyznaczenie wartoœci sygna³ów steruj¹cych, dla których uzyskane jest
         % zadane wzmocnienie op_points(i)
-        u0 = static_inv(op_points(op_point_idx),1);
-
+        if model_idx == 1
+            u0 = static_inv(op_points(op_point_idx),1);
+            [~, step1, u1] = step(u0, [step_size,0,0], D+1, model_idx);
+            [~, step2, ~] = step(u0, [0,step_size,0], D+1, model_idx);
+            s = zeros(D+1, 2);
+            s(:,1)=step1;
+            s(:,2)=step2;
+        else
+            u0 = static_inv2(op_points(op_point_idx),1);
+            [~, step1, u1] = step(u0, step_size, D+1, model_idx);
+            s = zeros(D+1, 1);
+            s(:,1)=step1;
+        end
         % wyznaczenie odpowiedzi skokowych z danego punktu pracy dla sygna³u
         % steruj¹cego u1 i zak³ócenia u2
-        [~, step1, u1] = step(u0, [step_size,0,0], D+1);
-        [~, step2, ~] = step(u0, [0,step_size,0], D+1);
-        s = zeros(D+1, 2);
-        s(:,1)=step1;
-        s(:,2)=step2;
+        
 
         % utworzenie listy regulatorów dmc na podstawie wygenerowanych
         % odpowiedzi skokowych

@@ -67,16 +67,17 @@ classdef DMC < handle
                 du = obj.K1sum*(Ysp(model.k) - y) - obj.KMp1*dU1 - obj.KMp2*dU2;
             else
                 du = obj.K(1,:)*(Ysp(model.k)*ones(obj.N,1) - free_resp_override(1:obj.N));
+                % du = obj.K(1,:)*((Ysp(model.k) - y)*ones(obj.N,1) - obj.Mp1*dU1);
             end
             % du = obj.K1sum*(Ysp(model.k) - y) - obj.KMp1*dU1 - obj.KMp2*dU2;
             u_new = up(1,1) + du;
-            if obj.output_limit(1) ~= 0 || obj.output_limit(2) ~= 0
-                free_resp = model.y(model.k) + obj.Mp1(1,:)*dU1 + obj.Mp2(1,:)*dU2;
-                du_min = (obj.output_limit(1)-free_resp)/obj.s(1,1);
-                du_max = (obj.output_limit(2)-free_resp)/obj.s(1,1);
-%                 u_new = u(k-1,1)+min(max(du_min, du), du_max);
-                u_new = up(1,1)+min(max(du_min, du), du_max);
-            end
+%             if obj.output_limit(1) ~= 0 || obj.output_limit(2) ~= 0
+%                 free_resp = model.y(model.k) + obj.Mp1(1,:)*dU1 + obj.Mp2(1,:)*dU2;
+%                 du_min = (obj.output_limit(1)-free_resp)/obj.s(1,1);
+%                 du_max = (obj.output_limit(2)-free_resp)/obj.s(1,1);
+% %                 u_new = u(k-1,1)+min(max(du_min, du), du_max);
+%                 u_new = up(1,1)+min(max(du_min, du), du_max);
+%             end
         end
         function u_new = get_full_steering(obj, model, free_resp_override, suggested_steering)
             if nargin < 4

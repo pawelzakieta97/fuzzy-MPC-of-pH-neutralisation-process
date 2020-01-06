@@ -1,8 +1,16 @@
-function model = simulation(controller, Ysp, params)
-if nargin<3
-    params = ModelParams();
+function model = simulation(controller, Ysp, model_idx, params)
+if nargin<4
+    if model_idx == 1
+        params = ModelParams();
+    else
+        params = Model2Params();
+    end
 end
-model = Model(Ysp, params);
+if model_idx == 1
+    model = Model(Ysp, params);
+else
+    model = Model2(Ysp, params);
+end
 sim_len = length(model.Ysp);
 u_nominal = model.params.u_nominal;
 u = repmat(u_nominal, [sim_len, 1]);
@@ -10,10 +18,10 @@ for k=1:sim_len-1
     % regualtor zwraca wartoœæ sygna³u steruj¹cego na podstawie obiektu
     % modelu zawieraj¹cego historiê stanu obiektu (zmienne stanu, wyjœcia i
     % sterowania) oraz trajektoriê zadan¹
-    if k==20
+    if k==200
         a=1;
     end
     u(k,1) = controller.get_steering(model);
-    u(k,1) = min(max(u(k,1),model.params.u1_min),model.params.u1_max);
+    u(k,1) = min(max(u(k,:),model.params.u_min),model.params.u_max);
     model.update(u(k,:));
 end

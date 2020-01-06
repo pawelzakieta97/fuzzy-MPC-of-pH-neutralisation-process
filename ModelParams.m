@@ -37,6 +37,8 @@ classdef ModelParams < handle
         u3_min = 10;
         u3_max = 20;
 
+        u_min = [0,0,10];
+        u_max = [30,30,20];
         Ts = 10;
         subdiv = 1;
     end

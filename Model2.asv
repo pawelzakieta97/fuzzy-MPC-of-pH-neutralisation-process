@@ -1,48 +1,76 @@
-classdef Model < handle
+classdef Model2 < handle
     properties
         x = zeros(500,2);
         y = zeros(500,1);
-        u = zeros(500,3);
+        u = zeros(500,1);
         k=1;
         Ysp = [];
         params;
     end
     methods
-        function obj=Model(Ysp, params)
+        function obj=Model2(Ysp, params)
             if nargin<2
-                obj.params = ModelParams();
+                obj.params = Model2Params();
             else
                 obj.params = params;
             end
-            obj.x = repmat(obj.params.x_nominal, [length(Ysp),1]);
-            obj.y = ones(length(Ysp),1)*obj.params.y_nominal;
-            obj.u = repmat(obj.params.u_nominal, [length(Ysp),1]);
-            obj.k=1;
+            samples = 500;
             if nargin>0
                 obj.Ysp = Ysp;
+                samples = length(Ysp);
             end
+            obj.x = repmat(obj.params.x_nominal, [samples,1]);
+            obj.y = ones(samples,1)*obj.params.y_nominal;
+            obj.u = repmat(obj.params.u_nominal, [samples,1]);
+            obj.k=1;
+            
         end
         function y=update(obj, u)
             for j=1:size(u,1)
-                obj.u(obj.k, :) = u(j,:);
+                obj.u(obj.k) = u(j);
 
                 % obliczenie nowej wartoœci zmiennych stanu za pomoc¹ metody
                 % Eulera. Zmienna subdiv zwiêksza rozdzielczoœæ symulacji
                 % wzglêdem okresu próbkowania
-                obj.x(obj.k+1, :) = obj.x(obj.k, :);
+                obj.x(obj.k+1) = obj.x(obj.k);
+                obj.y(obj.k+1) = obj.y(obj.k);
                 u_time = obj.k-obj.params.output_delay;
                 if u_time <1
                     u_update = obj.params.u_nominal;
                 else
-                    u_update = obj.u(u_time, :);
+                    u_update = obj.u(u_time);
                 end
                 for i=1:obj.params.subdiv
-                    obj.x(obj.k+1,:) = obj.x(obj.k+1,:)+...
-                        dx(obj.x(obj.k+1,:), u_update, obj.params)' * obj.params.Ts/obj.params.subdiv;
+                    dx = -obj.params.k1*obj.x(obj.k+1)-...
+                        obj.params.k3*(obj.x(obj.k+1))^2 +...
+                        u_update/obj.params.V*(obj.params.Caf-obj.x(obj.k+1));
+                
+                    dy = obj.params.k1*obj.x(obj.k+1)-...
+                        obj.params.k2*obj.y(obj.k+1)-...
+                        u_update/obj.params.V*obj.y(obj.k+1);
+                    
+                    obj.x(obj.k+1) = obj.x(obj.k+1)+dx*obj.params.Ts;
+                    obj.y(obj.k+1) = obj.y(obj.k+1)+dy*obj.params.Ts;
                 end
-                obj.y(obj.k+1) = root_h(obj.x(obj.k+1,:),obj.y(obj.k), obj.params);
-                y = obj.y(obj.k+1);
                 obj.k = obj.k+1;
+            end
+        end
+        function [x,y] = static_output(obj, u)
+            k1 = obj.params.k1;
+            k2 = obj.params.k2;
+            k3 = obj.params.k3;
+            V = obj.params.V;
+            Caf = obj.params.Caf;
+            x = (-k1-u/V+sqrt((k1+u/V)^2+4*k3*u*Caf/V))/2/k3;
+            y = k1*x/(k2+u/V);
+        end
+        function [u,y] = static_char(obj, samples)
+            u_min = obj.params.u_min;
+            u_max = obj.params.u_max;
+            u = zeros(samples, 1);
+            y = zeros(samples, 1);
+            for k=1:samples
+                u = m_min + (u_max-u_min)/samples*k
             end
         end
         function up = get_up(obj, length)
