@@ -35,7 +35,7 @@ if length(step_sizes) == 1
         diffeq_models(op_point_idx) = diff_eq_model;
     end
     fm = FuzzyModel(diffeq_models, membership_fun);
-    fc = FuzzyController(controllers, membership_fun, fm);
+    fc = FuzzyController(controllers, membership_fun, fm, model_idx);
     
 else
     for step_idx=1:len(step_sizes)

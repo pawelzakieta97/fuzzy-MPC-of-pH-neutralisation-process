@@ -12,7 +12,7 @@ classdef Model2Params
         y_min = 0.1;
         y_max = 1.2;
         y_nominal = 1.12;
-        output_delay = 0;
+        output_delay = 4;
         subdiv = 1;
         V = 1;
     end

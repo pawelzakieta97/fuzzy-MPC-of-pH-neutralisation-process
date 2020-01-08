@@ -22,12 +22,22 @@ classdef DMC_WM < handle
         linear_model;
         lower_bandwidth = 0.0;
         upper_bandwidth = 0.0;
+        static_inv;
+        static_output;
     end
     methods
-        function obj=DMC_WM(N, Nu, D, lambda)
-            obj.params = ModelParams();
-            [~,s,~] = step(obj.params.u_nominal, 0.1, 80);
+        function obj=DMC_WM(N, Nu, D, lambda, static_inv, model_idx)
+            
+            if model_idx == 1
+                obj.params = ModelParams();
+                step_size = 0.1;
+            else
+                obj.params = Model2Params();
+                step_size = 0.001;
+            end
+            [~,s,~] = step(obj.params.u_nominal, step_size, D, model_idx);
             amp = s(length(s))-s(1);
+            obj.static_inv = static_inv;
             linear_model = StepRespModel(s, amp, obj.params);
             obj.linear_model = linear_model;
             obj.N = N;
@@ -61,9 +71,9 @@ classdef DMC_WM < handle
             ysp = current_model.Ysp(current_model.k);
             
             y_out=current_model.y(current_model.k);
-            y_in = static_inv(y_out);
+            y_in = obj.static_inv(y_out);
             y_in = y_in(1);
-            y_in_sp = static_inv(ysp);
+            y_in_sp = obj.static_inv(ysp);
             y_in_sp = y_in_sp(1);
             dU1 = up(1:D-1,1)-up(2:D,1);
             if size(up, 2) == 1

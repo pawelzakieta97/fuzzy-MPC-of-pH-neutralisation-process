@@ -19,12 +19,21 @@ classdef FuzzyController < handle
         predict_current_state = 0;
         limit_output = 0;
         predict_lambdas = 0;
+        params;
     end
     methods
-        function obj = FuzzyController(controllers, membership_fun, fm)
+        function obj = FuzzyController(controllers, membership_fun, fm, model_idx)
             % konstruktor przyjmuje listê regulatorów oraz punkty pracy w
             % postaci stanu modelu. Funkcja membership_fun okreœla
             % podobieñstwo obecnej sytuacji i punktu pracy
+            if nargin<4
+                model_idx = 1;
+            end
+            if model_idx == 1
+                obj.params = ModelParams();
+            else
+                obj.params = Model2Params();
+            end
             obj.controllers = controllers;
             obj.membership_fun = membership_fun;
             obj.weights = zeros(1000,length(controllers));
@@ -33,7 +42,6 @@ classdef FuzzyController < handle
             % przyrostu wartoœci sterowania. powinien on byc mniej wiêcej
             % po œrodku zakresu pracy, wielkoœæ skoku powinna byæ niewielka
             obj.main_controller = controllers(1);
-            params = ModelParams();
             obj.iterations = 0;
             obj.use_full_steering = 0;
             obj.multi_lin = 0;
@@ -46,14 +54,13 @@ classdef FuzzyController < handle
             D = 80;
             obj.step_responses = zeros(500,D);
             obj.free_responses = zeros(500,500);
-            obj.planned_steering = repmat(params.u_nominal,[80,1]);
+            obj.planned_steering = repmat(obj.params.u_nominal,[80,1]);
         end
         function x=reset(obj)
             D = 80;
             obj.free_responses = zeros(500,500);
             obj.step_responses = zeros(500,D);
-            params = ModelParams();
-            obj.planned_steering = repmat(params.u_nominal,[80,1]);
+            obj.planned_steering = repmat(obj.params.u_nominal,[80,1]);
         end
         function exp_step = approximate_steering(obj, model)
             exp_step = obj.main_controller.get_steering(model) - model.get_up(1);
@@ -99,6 +106,9 @@ classdef FuzzyController < handle
                     obj.planned_steering(:,1) = steering(1)*ones(N,1);
                 else
                     for iteration = 1:obj.iterations
+                        if current_model.k == 170
+                            a=1;
+                        end
                         obj.sim_model.copy_state(current_model);
                         for t=1:N
                             obj.sim_model.update(obj.planned_steering(t,:));
@@ -111,11 +121,19 @@ classdef FuzzyController < handle
                         steering = local_DMC.get_full_steering(current_model, free_response, planned_steps);
                         obj.planned_steering(1:Nu, 1)= steering(1:Nu);
                         obj.planned_steering(Nu+1:N,1) = steering(Nu)*ones(N-Nu,1);
+                        obj.planned_steering = min(max(obj.planned_steering, obj.params.u_min(1)),obj.params.u_max(1));
+                        
+                        if isnan(obj.planned_steering(1))
+                            a=1;
+                        end
+%                         obj.planned_steering(1:Nu, 1)= max(min(steering(1:Nu), obj.params.u_max(1)), obj.params.u_min(1));
+%                         obj.planned_steering(Nu+1:N,1) = max(min(steering(Nu)*ones(N-Nu,1), obj.params.u_max(1)), obj.params.u_min(1));
                     end
                 end
                 if obj.iterations > 0
                     obj.planned_steering(1:Nu-1, 1)= steering(2:end);
                     obj.planned_steering(Nu:N,1) = steering(Nu)*ones(N-Nu+1,1);
+                    obj.planned_steering = min(max(obj.planned_steering, obj.params.u_min(1)),obj.params.u_max(1));
                 end
             else
                 steering = local_DMC.get_steering(current_model);

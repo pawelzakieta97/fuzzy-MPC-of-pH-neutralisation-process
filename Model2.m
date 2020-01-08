@@ -61,7 +61,11 @@ classdef Model2 < handle
             k3 = obj.params.k3;
             V = obj.params.V;
             Caf = obj.params.Caf;
-            x = (-k1-u/V+sqrt((k1+u/V)^2+4*k3*u*Caf/V))/2/k3;
+            if (k1+u/V)^2+4*k3*u*Caf/V<0
+                x = (-k1-u/V)/2/k3;
+            else
+                x = (-k1-u/V+sqrt((k1+u/V)^2+4*k3*u*Caf/V))/2/k3;
+            end
             y = k1*x/(k2+u/V);
         end
         function [u,y] = static_char(obj, samples)

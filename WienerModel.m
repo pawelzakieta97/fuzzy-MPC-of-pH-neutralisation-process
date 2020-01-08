@@ -5,16 +5,32 @@ classdef WienerModel < StepRespModel
         M1;
         M2;
         Ysp;
+        static_output;
+        static_inv;
+        model_idx;
     end
     methods
-        function obj = WienerModel(params)
-            if nargin<1
-                params = ModelParams();
+        function obj = WienerModel(model_idx, params)
+            
+            if model_idx == 1 || nargin<1
+                model_idx = 1;
+                step_size = 0.1;
+                if nargin<2
+                    params = ModelParams();
+                end
+            else
+                if model_idx == 2
+                    step_size = 0.001;
+                    if nargin<2
+                        params = Model2Params();
+                    end
+                end
             end
-            [~,s,~] = step(params.u_nominal, 0.1, 80);
+            [~,s,~] = step(params.u_nominal, step_size, 80, model_idx);
             amp = s(length(s))-s(1);
             obj = obj@StepRespModel(s, amp, params);
-            obj.y_in = obj.params.u1_nominal *ones(500,1);
+            obj.y_in = obj.params.u_nominal(1) *ones(500,1);
+            obj.model_idx = model_idx;
         end
         function y = update(obj, u)
             obj.u(obj.k, :) = u;
@@ -22,13 +38,18 @@ classdef WienerModel < StepRespModel
             up = obj.get_up(obj.D);
             du = up(1:obj.D-1, :)-up(2:obj.D, :);
             s1 = obj.s1(1:obj.D-1);
-            s2 = obj.s2(1:obj.D-1);
-            y_in = up(obj.D, 1)+s1'*du(:,1) + s2'*du(:,2);
+            % s2 = obj.s2(1:obj.D-1);
+            y_in = up(obj.D, 1)+s1'*du(:,1);%  + s2'*du(:,2);
             % y_in = obj.y_in(obj.k-1) + obj.Mp1*du(:,1) + obj.Mp2*du(:,2);
             obj.y_in(obj.k) = y_in;
             u0 = obj.params.u_nominal;
             u0(1) = y_in;
-            [~, y] = static_output(u0, obj.params);
+            if obj.model_idx == 1
+                [~, y] = static_output(u0, obj.params);
+            else
+                m = Model2();
+                [~, y] = m.static_output(u0);
+            end
             obj.y(obj.k) = y;
         end
         function obj=verify(obj, model, plot)
