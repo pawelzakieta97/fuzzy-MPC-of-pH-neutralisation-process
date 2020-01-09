@@ -4,7 +4,7 @@ addpath('../')
 D = 80;
 N = D;
 Nu = 40;
-lambda = 0.2;
+lambda = 0.5;
 
 
 Ysp = random_signal(500, 200, [params.y_min, params.y_max], 1);

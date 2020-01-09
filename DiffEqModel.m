@@ -15,9 +15,15 @@ classdef DiffEqModel < handle
         D = 80;
         Mp1; 
         Mp2;
+        model_idx;
+        sigma;
     end
     methods
-        function obj=DiffEqModel(u,y,nb,na)
+        function obj=DiffEqModel(u,y,nb,na, params)
+            if nargin<5
+                params = ModelParams();
+            end
+            obj.params = params;
             obj.op_point = mean(y);
             obj.op_point_u = mean(u);
             obj.nb = nb;
@@ -36,9 +42,8 @@ classdef DiffEqModel < handle
             obj.a = w(1:na);
             obj.b = w(na+1:na+nb);
             obj.const = w(na+nb+1);
-            obj.params = ModelParams();
             obj.y = obj.params.y_nominal*ones(500,1);
-            obj.u = obj.params.u1_nominal*ones(500,1);
+            obj.u = obj.params.u_nominal(1)*ones(500,1);
             obj.s = obj.step(100);
             
         end
@@ -51,7 +56,7 @@ classdef DiffEqModel < handle
         function obj = reset(obj)
             obj.k = 1;
             obj.y = obj.params.y_nominal*ones(500,1);
-            obj.u = obj.params.u1_nominal*ones(500,1);
+            obj.u = obj.params.u_nominal(1)*ones(500,1);
         end
         function obj=verify(obj, model, plot)
             obj.reset();

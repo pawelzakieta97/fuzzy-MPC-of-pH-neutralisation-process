@@ -19,6 +19,7 @@ step_size = 0.1;
 [fc, fm] = get_fuzzy_controller(op_points, lambda_init, step_size, @normal, Nu, 1);
 fc.numeric = false;
 fc.set_sigmas([1,1,1,1,1]);
+fm.set_sigmas([1,1,1,1,1]);
 % fc.set_sigmas([1.1,0.38,1.2,0.43,1.53]);
 
 Ysp = generate_setpoint();
@@ -34,16 +35,23 @@ fc.numeric = true;
 fc.use_full_steering = false;
 fc.predict_lambdas = 0;
 fc.iterations = 0;
-fc.sim_model = WienerModel();
+fc.sim_model = WienerModel(1);
 model_sl = simulation(fc, Ysp,1);
-
 
 fc.reset();
 fc.numeric = true;
 fc.use_full_steering = true;
 fc.predict_lambdas = 0;
 fc.iterations = 0;
-fc.sim_model = WienerModel();
+fc.sim_model = fm;
+model_slrn_fm = simulation(fc, Ysp,1);
+
+fc.reset();
+fc.numeric = true;
+fc.use_full_steering = true;
+fc.predict_lambdas = 0;
+fc.iterations = 0;
+fc.sim_model = WienerModel(1);
 model_slrn = simulation(fc, Ysp,1);
 
 fc.reset();
@@ -51,7 +59,7 @@ fc.numeric = true;
 fc.use_full_steering = true;
 fc.predict_lambdas = 0;
 fc.iterations = 1;
-fc.sim_model = WienerModel();
+fc.sim_model = WienerModel(1);
 model_slrn_full = simulation(fc, Ysp,1);
 
 
@@ -61,7 +69,7 @@ fc.use_full_steering = true;
 fc.predict_lambdas = 0;
 fc.iterations = 1;
 fc.predict_current_state = true;
-fc.sim_model = WienerModel();
+fc.sim_model = WienerModel(1);
 model_slrn_full_pcs = simulation(fc, Ysp,1);
 
 fc.reset();
@@ -70,7 +78,7 @@ fc.multi_lin = true;
 fc.use_full_steering = true;
 fc.predict_lambdas = 0;
 fc.iterations = 1;
-fc.sim_model = WienerModel();
+fc.sim_model = WienerModel(1);
 model_mlrn_full_w = simulation(fc, Ysp,1);
 
 fc.reset();
@@ -79,7 +87,7 @@ fc.multi_lin = true;
 fc.use_full_steering = true;
 fc.iterations = 1;
 fc.predict_lambdas = 1;
-fc.sim_model = WienerModel();
+fc.sim_model = WienerModel(1);
 model_mlrn_full_pl = simulation(fc, Ysp,1);
 
 

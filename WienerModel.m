@@ -92,7 +92,7 @@ classdef WienerModel < StepRespModel
             legend('u1');
         end
         function wm = clone(obj)
-            wm = WienerModel();
+            wm = WienerModel(obj.model_idx);
             wm.copy_state(obj);
         end
     end

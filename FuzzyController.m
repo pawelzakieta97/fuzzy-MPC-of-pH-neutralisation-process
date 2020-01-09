@@ -20,6 +20,9 @@ classdef FuzzyController < handle
         limit_output = 0;
         predict_lambdas = 0;
         params;
+        limit_type = 1;
+        lim_samples = 1;
+        static_inv;
     end
     methods
         function obj = FuzzyController(controllers, membership_fun, fm, model_idx)
@@ -31,8 +34,10 @@ classdef FuzzyController < handle
             end
             if model_idx == 1
                 obj.params = ModelParams();
+                obj.static_inv = @static_inv;
             else
                 obj.params = Model2Params();
+                obj.static_inv = @static_inv2;
             end
             obj.controllers = controllers;
             obj.membership_fun = membership_fun;
@@ -65,6 +70,7 @@ classdef FuzzyController < handle
         function exp_step = approximate_steering(obj, model)
             exp_step = obj.main_controller.get_steering(model) - model.get_up(1);
         end
+        
         function u = get_steering_sl(obj, current_model)
             total_weight = 0;
             D = obj.controllers(1).D;
@@ -200,7 +206,6 @@ classdef FuzzyController < handle
                 steering = local_DMC.get_steering(current_model);
             end
             u = steering(1);
-            
         end
         
         function u = get_steering(obj, current_model)
@@ -215,10 +220,10 @@ classdef FuzzyController < handle
             end
             if obj.limit_output
                 obj.sim_model.copy_state(current_model);
-                for t=1:current_model.params.output_delay+1
-                    obj.sim_model.update(current_model.get_up(1));
-                end
-                u = obj.limit_steering(u, obj.sim_model);
+%                 for t=1:current_model.params.output_delay+1
+%                     obj.sim_model.update(current_model.get_up(1));
+%                 end
+                u = obj.limit_steering(u, current_model);
             end
         end
         
@@ -234,6 +239,7 @@ classdef FuzzyController < handle
             steering = steering/total_weight;
             u = steering(1);
         end
+        
         function local_s = get_local_s(obj, current_model)
             total_weight = 0;
             local_s = obj.controllers(1).linear_model.s1*0;
@@ -241,12 +247,11 @@ classdef FuzzyController < handle
                 weight = obj.membership_fun(obj.controllers(i), current_model);
                 obj.weights(current_model.k, i) = weight;
                 total_weight = total_weight + weight;
-                if obj.numeric
-                    local_s = local_s + weight * obj.controllers(i).linear_model.s1;
-                end
+                local_s = local_s + weight * obj.controllers(i).linear_model.s1;
             end
             local_s = local_s/total_weight;
         end
+        
         function local_lambda = get_local_lambda(obj, current_model)
             total_weight = 0;
             local_lambda = 0;
@@ -260,21 +265,71 @@ classdef FuzzyController < handle
             end
             local_lambda = local_lambda/total_weight;
         end
-        function u_limited = limit_steering(obj, u, predicted_model)
+        
+        function u_limited = limit_steering(obj, u, current_model)
             lower_limit = obj.output_limit(1);
             upper_limit = obj.output_limit(2);
-            lower_limit_dist = predicted_model.y(predicted_model.k)-lower_limit;
-            upper_limit_dist = upper_limit - predicted_model.y(predicted_model.k);
-            if lower_limit_dist<obj.lower_bandwidth || upper_limit_dist>obj.upper_bandwidth
-                max_steering = static_inv(upper_limit);
-                max_steering = max_steering(1);
-                min_steering = static_inv(lower_limit);
-                min_steering = min_steering(1);
-                u_limited = min(max(u, min_steering), max_steering);
-            else
-                u_limited = u;
+            if obj.limit_type ==1
+                lower_limit_dist = current_model.y(current_model.k)-lower_limit;
+                upper_limit_dist = upper_limit - current_model.y(current_model.k);
+                if lower_limit_dist<obj.lower_bandwidth || upper_limit_dist>obj.upper_bandwidth
+                    max_steering = obj.static_inv(upper_limit);
+                    max_steering = max_steering(1);
+                    min_steering = obj.static_inv(lower_limit);
+                    min_steering = min_steering(1);
+                    u_limited = min(max(u, min_steering), max_steering);
+                else
+                    u_limited = u;
+                end
+            end
+            if obj.limit_type == 2
+                local_s = obj.get_local_s(current_model);
+                if local_s(10) == 0
+                    a=1;
+                end
+                D = obj.controllers(1).D;
+                up = current_model.get_up(D);
+                du = up(1:end-1, 1)-up(2:end, 1);
+                Mp = generateMp(obj.lim_samples+obj.params.output_delay, D, local_s);
+                Y0 = current_model.y(current_model.k)+Mp*du;
+                max_du = 99999;
+                min_du = -99999;
+                for k=obj.params.output_delay+1:obj.lim_samples+obj.params.output_delay
+                    if local_s(k)>0
+                        max_du_temp = (upper_limit-Y0(k))/local_s(k);
+                        max_du = min(max_du_temp, max_du);
+
+                        min_du_temp = (lower_limit-Y0(k))/local_s(k);
+                        min_du = max(min_du_temp, min_du);
+                    else
+                        max_du_temp = (lower_limit-Y0(k))/local_s(k);
+                        max_du = min(max_du_temp, max_du);
+
+                        min_du_temp = (upper_limit-Y0(k))/local_s(k);
+                        min_du = max(min_du_temp, min_du);
+                    end
+                end
+                if min(max(u, up(1)+min_du), up(1)+max_du) ~= u
+                    a=1;
+                    current_model.k
+                end
+                u_min = max(up(1)+min_du, obj.params.u_min(1));
+                u_max = min(up(1)+max_du, obj.params.u_max(1));
+                
+                threshold = 0;
+                if u_min+threshold<u_max
+                    u_limited = min(max(u, u_min), u_max);
+                else
+                    max_static = obj.static_inv(upper_limit);
+                    max_static = max_static(1);
+                    min_static = obj.static_inv(lower_limit);
+                    min_static = min_static(1);
+                    u_limited = min(max(u, min_static), max_static);
+                    % u_limited = u;
+                end
             end
         end
+        
         function obj = update_lambdas(obj, lambdas)
             for i =1:length(lambdas)
                 obj.controllers(i).set_lambda(lambdas(i));
@@ -284,6 +339,23 @@ classdef FuzzyController < handle
             for i=1:length(obj.controllers)
                 obj.controllers(i).linear_model.sigma = sigmas(i);
             end
+        end
+        
+        function obj = plot_mf(obj, samples)
+            m = Model([]);
+            figure;
+            hold on;
+            for k=1:length(obj.controllers)
+                w = zeros(samples, length(obj.controllers));
+                y = zeros(samples,1);
+                for i=1:samples
+                    y(i) = obj.params.y_min+(obj.params.y_max-obj.params.y_min)*i/samples;
+                    m.y(m.k) = y(i);
+                    w(i, k) = obj.membership_fun(obj.controllers(k), m);
+                end
+                plot(y, w(:,k));
+            end
+            hold off;
         end
     end
 end

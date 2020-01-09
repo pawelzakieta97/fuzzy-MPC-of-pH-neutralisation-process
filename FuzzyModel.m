@@ -9,14 +9,21 @@ classdef FuzzyModel < handle
         k=1;
         params;
         free_responses;
-        
+        model_idx;
+%         static_output;
     end
     methods
-        function obj = FuzzyModel(models, membership_fun, params)
+        function obj = FuzzyModel(models, membership_fun, model_idx)
             if nargin<3
-                params = ModelParams();
+                model_idx =1;
             end
-            obj.params = params;
+            if model_idx == 1
+                params = ModelParams();
+            else
+                params = Model2Params();
+            end
+            obj.model_idx = model_idx;
+            obj.params = models(1).params;
             obj.linear_models = models;
             obj.membership_fun = membership_fun;
             obj.weights = zeros(500,length(models));
@@ -28,6 +35,13 @@ classdef FuzzyModel < handle
             obj.free_responses = obj.params.y_nominal*ones(501,501);
             
         end
+        
+        function obj = set_sigmas(obj, sigmas)
+            for i=1:length(obj.linear_models)
+                obj.linear_models(i).sigma = sigmas(i);
+            end
+        end
+        
         function y = update1(obj, u)
             obj.u(obj.k, :) = u;
             total_weight = 0;
@@ -148,7 +162,7 @@ classdef FuzzyModel < handle
             for i=1:length(obj.linear_models)
                 % weight = obj.membership_fun(obj.linear_models(i), obj);
                 y_mean = mean(obj.y(max(obj.k-D,1):obj.k));
-                weight = gaussmf(obj.y(obj.k), [1, obj.linear_models(i).op_point]);
+                weight = gaussmf(obj.y(obj.k), [obj.linear_models(i).sigma, obj.linear_models(i).op_point]);
                 % weight = gaussmf(y_mean, [1, obj.linear_models(i).op_point]);
                 obj.weights(obj.k, i) = weight;
                 total_weight = total_weight + weight;
@@ -157,20 +171,26 @@ classdef FuzzyModel < handle
             obj.weights(obj.k,:) = obj.weights(obj.k,:)/total_weight;
             local_s = local_s/total_weight;
             Mp = generateMp(1, D, local_s);
-            M = generateM(1, D-1, D, local_s);
+%             M = generateM(1, D-1, D, local_s);
             obj.k = obj.k+1;
             up = obj.get_up(D);
             dup = up(1:D-1,1) - up(2:D,1);
-            % dup = dup';
-            %obj.y(obj.k) = obj.y(obj.k-1)+Mp*dup;
-            [~, static_y] = static_output(up(D,:));
-            [~, static_y1] = static_output(up(1,:));
+            
+            if obj.model_idx == 1
+                [~, static_y] = static_output(up(D,:));
+                [~, static_y1] = static_output(up(1,:));
+            else
+                [~, static_y] = static_output2(up(D,:));
+                [~, static_y1] = static_output2(up(1,:));
+            end
             local_s = local_s';
-            % obj.y(obj.k) = local_s(1:79)*dup + static_y;
-            obj.y(obj.k) = obj.y(obj.k-1)+Mp*dup;
-            k = 0.05;
-            % obj.y(obj.k) = (1-k)*obj.y(obj.k) + k*(local_s(1:79)*dup + static_y);
-            obj.y(obj.k) = (1-k)*obj.y(obj.k) + k*static_y1;
+            
+            y1 = obj.y(obj.k-1)+Mp*dup;
+            k = 0.01;
+            k = 0;
+            
+            obj.y(obj.k) = (1-k)*y1 + k*static_y1;
+            % obj.y(obj.k) = static_y + local_s(1:length(dup))*dup;
         end
         function up = get_up(obj, length)
             % zwraca wartoœci przesz³ych sterowañ
@@ -200,7 +220,7 @@ classdef FuzzyModel < handle
                 %obj.update_local_lin(model.u(k,:));
                 %obj.updateML(model.u(k,:));
                 % obj.update_custom(model.u(k,:));
-                obj.updateSL(model.u(k,:));
+                obj.update(model.u(k,:));
             end
             
             if nargin>2 && plot
