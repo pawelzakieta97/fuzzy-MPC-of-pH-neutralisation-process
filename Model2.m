@@ -1,8 +1,8 @@
 classdef Model2 < handle
     properties
-        x = zeros(500,2);
-        y = zeros(500,1);
-        u = zeros(500,1);
+        x = zeros(1000,2);
+        y = zeros(1000,1);
+        u = zeros(1000,1);
         k=1;
         Ysp = [];
         params;
@@ -125,6 +125,16 @@ classdef Model2 < handle
             obj.u = reference_model.u;
             obj.k = reference_model.k;
             
+        end
+        
+        function obj = save_csv(obj, filename)
+            column_names = {};
+            for u_idx = 1:size(obj.u,2)
+                column_names{u_idx} = ['u', num2str(u_idx)];
+            end
+            column_names{length(column_names)+1} = 'y';
+            column_names{length(column_names)+1} = 'ysp';
+            csvwrite_with_headers(filename, [obj.u, obj.y, obj.Ysp], column_names);
         end
     end
 end

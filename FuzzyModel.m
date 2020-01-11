@@ -47,7 +47,7 @@ classdef FuzzyModel < handle
             total_weight = 0;
             y = 0;
             for i=1:length(obj.linear_models)
-                weight = obj.membership_fun(obj.linear_models(i), obj);
+                weight = gaussmf(obj.y(obj.k), [obj.linear_models(i).sigma, obj.linear_models(i).op_point]);
                 obj.weights(obj.k, i) = weight;
                 total_weight = total_weight + weight;
                 y = y + obj.linear_models(i).update(u)*weight;
@@ -220,7 +220,7 @@ classdef FuzzyModel < handle
                 %obj.update_local_lin(model.u(k,:));
                 %obj.updateML(model.u(k,:));
                 % obj.update_custom(model.u(k,:));
-                obj.update(model.u(k,:));
+                obj.update1(model.u(k,:));
             end
             
             if nargin>2 && plot

@@ -25,3 +25,4 @@ Ysp = generate_setpoint();
 % Ysp = random_signal(500, 100, [6.9, 7.1], 1);
 model_a = simulation(fc, Ysp,1);
 model_a.plot();
+model_a.save_csv('../wykresy/ph/01-02-01-02-01.csv')
