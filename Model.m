@@ -94,6 +94,14 @@ classdef Model < handle
             obj.k = reference_model.k;
             
         end
+        
+        function obj = save_csv(obj, filename)
+            column_names = {};
+            for u_idx = 1:size(obj.u,2)
+                column_names(u_idx) = 'u'+num2str(u_idx);
+            end
+            csvwrite_with_headers(filename, [obj.u, obj.y, obj.Ysp], column_names);
+        end
     end
 end
             
