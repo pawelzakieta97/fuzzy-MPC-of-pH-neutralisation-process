@@ -1,8 +1,8 @@
 addpath('./membership_functions/');
 addpath('../');
 
-% op_points = [3, 5, 7, 8.5, 10];
-op_points = [8.5];
+op_points = [2.96, 4.76, 6.7, 8.19, 10];
+% op_points = [8.5];
 D = 80;
 N = D;
 Nu = 40;
@@ -17,15 +17,15 @@ step_size = 0.1;
 
 [fc, fm] = get_fuzzy_controller(op_points, lambda_init, step_size, @normal, Nu, 1);
 fc.numeric = false;
-% fc.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
-% fm.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
+fc.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
+fm.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
 % fc.set_sigmas([1.1,0.38,1.2,0.43,1.53]);
-% fc.update_lambdas([1, 0.5, 1, 0.2, 1]);
+fc.update_lambdas([1, 0.5, 1, 0.2, 1]);
 % fc.update_lambdas([0.1, 0.1, 0.1, 0.1, 0.1]);
 Ysp = generate_setpoint();
-fm.set_sigmas(1);
+% fm.set_sigmas(1);
 range = [op_points(1)-0.1, op_points(1)+0.1];
-Ysp = random_signal(500, 100, range, 1);
+%Ysp = random_signal(500, 100, range, 1);
 model1_a = simulation(fc, Ysp,1);
 %model1_a.plot();
 % model1_a.save_csv(['../wykresy/ph/',folder_name,'/analityczny.csv']);
