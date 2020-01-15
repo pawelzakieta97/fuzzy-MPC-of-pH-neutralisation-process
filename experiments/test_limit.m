@@ -20,7 +20,9 @@ fm.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
 fc.update_lambdas([0.2, 0.2, 0.2, 0.2, 0.2]);
 fc.update_lambdas([1, 0.5, 1, 0.2, 1]);
 fc.sim_model = WienerModel(1);
-Ysp = [5*ones(50,1); 8*ones(50,1); 4.5*ones(100,1)];
+fc.numeric = 0;
+
+Ysp = [5*ones(30,1); 8*ones(40,1); 4.5*ones(30,1)];
 model_a = simulation(fc, Ysp,1);
 model_a.plot();
 model_a.save_csv('../wykresy/ph/ograniczenia/a.csv');
@@ -54,6 +56,7 @@ model_al10.plot();
 model_al10.save_csv('../wykresy/ph/ograniczenia/a10.csv');
 
 
+
 fc.linearize_sim_model = 1;
 fc.lim_use_sim_model = 1;
 fc.limit_output = 1;
@@ -69,7 +72,7 @@ fc.lim_samples = 2;
 fc.lim_use_sim_model = 1;
 model_wl5 = simulation(fc, Ysp,1);
 model_wl5.plot();
-model_wl5.save_csv('../wykresy/ph/ograniczenia/w5.csv');
+model_wl5.save_csv('../wykresy/ph/ograniczenia/w2.csv');
 
 fc.limit_output = 1;
 fc.limit_type = 2;
@@ -77,4 +80,31 @@ fc.lim_samples = 5;
 fc.lim_use_sim_model = 1;
 model_wl10 = simulation(fc, Ysp,1);
 model_wl10.plot();
-model_wl10.save_csv('../wykresy/ph/ograniczenia/w10.csv');
+model_wl10.save_csv('../wykresy/ph/ograniczenia/w5.csv');
+
+
+fc.multi_lin = 1;
+fc.linearize_sim_model = 1;
+fc.lim_use_sim_model = 1;
+fc.limit_output = 1;
+fc.limit_type = 2;
+fc.lim_samples = 1;
+model_wl1 = simulation(fc, Ysp,1);
+model_wl1.plot();
+model_wl1.save_csv('../wykresy/ph/ograniczenia/wmulti1.csv');
+
+fc.limit_output = 1;
+fc.limit_type = 2;
+fc.lim_samples = 2;
+fc.lim_use_sim_model = 1;
+model_wl5 = simulation(fc, Ysp,1);
+model_wl5.plot();
+model_wl5.save_csv('../wykresy/ph/ograniczenia/wmulti2.csv');
+
+fc.limit_output = 1;
+fc.limit_type = 2;
+fc.lim_samples = 5;
+fc.lim_use_sim_model = 1;
+model_wl10 = simulation(fc, Ysp,1);
+model_wl10.plot();
+model_wl10.save_csv('../wykresy/ph/ograniczenia/wmulti5.csv');

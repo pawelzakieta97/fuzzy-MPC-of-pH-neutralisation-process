@@ -307,6 +307,7 @@ classdef FuzzyController < handle
                     for t=1:obj.lim_samples+obj.params.output_delay
                         obj.sim_model.update(up(1,:));
                         %future_local_s = obj.sim_model.get_local_s();
+                        
                         if obj.multi_lin
                             future_local_s = obj.get_local_s(obj.sim_model);
                             local_s(t) = future_local_s(t);

@@ -10,6 +10,7 @@ classdef WienerModel < StepRespModel
         model_idx;
         static_char;
         y_ref;
+        fis;
     end
     methods
         function obj = WienerModel(model_idx, params)
@@ -39,6 +40,7 @@ classdef WienerModel < StepRespModel
             u(:,1) = [1:samples]/samples*(params.u_max(1)-params.u_min(1))+params.u_min(1);
             obj.static_char = zeros(samples,1);
             if obj.model_idx == 1
+                % obj.fis = readfis('static1.fis');
                 for k =1:samples
                     [~,obj.static_char(k)] = static_output(u(k,:), params);
                 end
@@ -48,6 +50,9 @@ classdef WienerModel < StepRespModel
                     [~,obj.static_char(k)] = m.static_output(u(k,:));
                 end 
             end
+        end
+        function y = static_out(obj, u)
+            y = evalfis(u,obj.fis);
         end
         function i=get_static_char_idx(obj, y_s)
             [~,i] = min(abs(obj.static_char-y_s));
@@ -71,6 +76,7 @@ classdef WienerModel < StepRespModel
                 [~, y] = m.static_output(u0);
             end
             obj.y(obj.k) = y;
+            
         end
         function obj=verify(obj, model, plot, file_name)
             obj.reset();

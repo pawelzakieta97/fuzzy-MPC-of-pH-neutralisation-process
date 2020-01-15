@@ -14,6 +14,7 @@ step_size = 0.1;
 fc.numeric = false;
 fc.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
 fm.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
+%fm.set_sigmas([1.1,0.38,1.2,0.43,1.53]);
 Ysp = generate_setpoint();
 model_a = simulation(fc, Ysp,1);
 model_a.plot();

@@ -22,7 +22,7 @@ if length(step_sizes) == 1
             s(:,2)=step2;
             diff_eq_model = get_local_DEM(op_points(op_point_idx), 1, 1);
             step_model = StepRespModel(s, step_size, u0, ModelParams());
-            diff_eq_model.s = step_model.s1;
+            diff_eq_model.s1 = step_model.s1;
             params = ModelParams();
         else
             u0 = static_inv2(op_points(op_point_idx));
@@ -32,7 +32,7 @@ if length(step_sizes) == 1
             diff_eq_model = get_local_DEM(op_points(op_point_idx), 1, 2);
             
             step_model = StepRespModel(s, step_size, u0, Model2Params());
-            diff_eq_model.s = step_model.s1;
+            diff_eq_model.s1 = step_model.s1;
             params = Model2Params();
         end
         % wyznaczenie odpowiedzi skokowych z danego punktu pracy dla sygna³u
@@ -43,8 +43,8 @@ if length(step_sizes) == 1
         % odpowiedzi skokowych
         
         controllers(op_point_idx)=DMC(step_model,N,Nu,D,lambdas(op_point_idx));
-        %diffeq_models(op_point_idx) = diff_eq_model;
-        diffeq_models(op_point_idx) = step_model;
+        diffeq_models(op_point_idx) = diff_eq_model;
+        %diffeq_models(op_point_idx) = step_model;
     end
     fm = FuzzyModel(diffeq_models, membership_fun, model_idx);
     fm.params = params;

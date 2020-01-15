@@ -43,7 +43,7 @@ classdef FuzzyModel < handle
             end
         end
         
-        function y = update1(obj, u)
+        function y = update(obj, u)
             obj.u(obj.k, :) = u;
             total_weight = 0;
             y = 0;
@@ -65,7 +65,17 @@ classdef FuzzyModel < handle
                 obj.linear_models(i).y = obj.y;
             end
         end
-        
+        function local_s = get_local_s(obj)
+            local_s = obj.linear_models(1).s1*0;
+            total_weight = 0;
+            for i=1:length(obj.linear_models)
+                weight = obj.membership_fun(obj.linear_models(i), obj);
+                obj.weights(obj.k, i) = weight;
+                total_weight = total_weight + weight;
+                local_s = local_s + obj.linear_models(i).s1*weight;
+            end
+            local_s = local_s/total_weight;
+        end
         function y = update_custom(obj, u)
             sim_len = 501;
             D = 50;
@@ -162,7 +172,7 @@ classdef FuzzyModel < handle
             obj.k = obj.k+1;
             obj.y(obj.k) = y;
         end
-        function update(obj, u)
+        function update1(obj, u)
             obj.u(obj.k, :) = u;
             local_s = obj.linear_models(1).s*0;
             total_weight = 0;
@@ -228,7 +238,7 @@ classdef FuzzyModel < handle
                 %obj.update_local_lin(model.u(k,:));
                 %obj.updateML(model.u(k,:));
                 % obj.update_custom(model.u(k,:));
-                obj.update1(model.u(k,:));
+                obj.update(model.u(k,:));
             end
             
             if nargin>2 && plot
@@ -253,6 +263,11 @@ classdef FuzzyModel < handle
             obj.y = real_model.y;
             obj.u = real_model.u;
             obj.k = real_model.k;
+            for i=1:length(obj.linear_models)
+                obj.linear_models(i).k = real_model.k;
+                obj.linear_models(i).y = real_model.y;
+                obj.linear_models(i).u = real_model.u(:,1);
+            end
         end
         function obj=plot(obj)
             figure

@@ -1,6 +1,7 @@
 classdef DiffEqModel < handle
     properties
-        s = [];
+        s1;
+        %s = [];
         op_point;
         op_point_u;
         params;
@@ -17,6 +18,10 @@ classdef DiffEqModel < handle
         Mp2;
         model_idx;
         sigma;
+        slopel;
+        liml;
+        limr;
+        sloper;
     end
     methods
         function obj=DiffEqModel(u,y,nb,na, params)
@@ -30,10 +35,14 @@ classdef DiffEqModel < handle
             obj.na = na;
             u = u(1:min(length(u), length(y)));
             y = y(1:min(length(u), length(y)));
+            y = y(1+obj.params.output_delay:end);
+            u = u(1:length(y));
             sim_len = length(u);
             M = zeros(sim_len, na+nb+1);
             for k=max(nb, na)+1:sim_len
-                M(k,:)=[y(k-1:-1:k-na), u(k-1:-1:k-nb), 1];
+                y_row = y(k-1:-1:k-na);
+                u_row = u(k-1:-1:k-nb);
+                M(k,:)=[y_row', u_row', 1];
             end
             
             M = M(max(na, nb)+1:end, :);
@@ -44,7 +53,8 @@ classdef DiffEqModel < handle
             obj.const = w(na+nb+1);
             obj.y = obj.params.y_nominal*ones(500,1);
             obj.u = obj.params.u_nominal(1)*ones(500,1);
-            obj.s = obj.step(100);
+            %obj.s = obj.step(100);
+            obj.s1 = obj.step(100);
             
         end
         function y=update(obj, u)
@@ -53,8 +63,9 @@ classdef DiffEqModel < handle
             obj.k = obj.k+1;
             up = obj.get_up(obj.nb+obj.params.output_delay);
             up = up(obj.params.output_delay+1:end);
-            obj.y(obj.k) = obj.a' * obj.y(obj.k-1:-1:obj.k-obj.na) + obj.b * obj.u(obj.k-1:-1:obj.k-obj.nb) + obj.const;
-            obj.y(obj.k) = obj.a' * yp + obj.b * up + obj.const;
+            %obj.y(obj.k) = obj.a' * obj.y(obj.k-1:-1:obj.k-obj.na) + obj.b * obj.u(obj.k-1:-1:obj.k-obj.nb) + obj.const;
+            
+            obj.y(obj.k) = obj.a' * yp + obj.b' * up + obj.const;
             y = obj.y(obj.k);
         end
         function up = get_up(obj, length)
