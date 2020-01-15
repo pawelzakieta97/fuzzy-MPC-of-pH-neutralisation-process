@@ -29,7 +29,8 @@ fc.lim_use_sim_model = 0;
 fc.limit_output = 1;
 fc.limit_type = 2;
 fc.lim_samples = 1;
-fc.output_limit = [4.3, 8.2];
+fc.output_limit = [4.4, 8.1];
+
 model_al1 = simulation(fc, Ysp,1);
 model_al1.plot();
 model_al1.save_csv('../wykresy/ph/ograniczenia/a1.csv');
@@ -38,7 +39,7 @@ fc.limit_output = 1;
 fc.limit_type = 2;
 fc.lim_samples = 5;
 fc.lim_use_sim_model = 0;
-fc.output_limit = [4.3, 8.2];
+fc.output_limit = [4.4, 8.1];
 model_al5 = simulation(fc, Ysp,1);
 model_al5.plot();
 model_al5.save_csv('../wykresy/ph/ograniczenia/a5.csv');
@@ -47,14 +48,13 @@ fc.limit_output = 1;
 fc.limit_type = 2;
 fc.lim_samples = 10;
 fc.lim_use_sim_model = 0;
-fc.output_limit = [4.3, 8.2];
+fc.output_limit = [4.4, 8.1];
 model_al10 = simulation(fc, Ysp,1);
 model_al10.plot();
 model_al10.save_csv('../wykresy/ph/ograniczenia/a10.csv');
 
 
 fc.linearize_sim_model = 1;
-
 fc.lim_use_sim_model = 1;
 fc.limit_output = 1;
 fc.limit_type = 2;
@@ -65,7 +65,7 @@ model_wl1.save_csv('../wykresy/ph/ograniczenia/w1.csv');
 
 fc.limit_output = 1;
 fc.limit_type = 2;
-fc.lim_samples = 5;
+fc.lim_samples = 2;
 fc.lim_use_sim_model = 1;
 model_wl5 = simulation(fc, Ysp,1);
 model_wl5.plot();
@@ -73,7 +73,7 @@ model_wl5.save_csv('../wykresy/ph/ograniczenia/w5.csv');
 
 fc.limit_output = 1;
 fc.limit_type = 2;
-fc.lim_samples = 10;
+fc.lim_samples = 5;
 fc.lim_use_sim_model = 1;
 model_wl10 = simulation(fc, Ysp,1);
 model_wl10.plot();

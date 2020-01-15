@@ -19,23 +19,14 @@ step_size = 0.1;
 
 [fc, fm] = get_fuzzy_controller(op_points, lambda_init, step_size, @normal, Nu, 1);
 fc.numeric = false;
-fc.set_sigmas([1,1,1,1,1]);
-fm.set_sigmas([1,1,1,1,1]);
-
 fc.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
 fm.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
-% fc.set_sigmas([1.1,0.38,1.2,0.43,1.53]);
 fc.update_lambdas([1, 0.5, 1, 0.2, 1]);
-%fc.update_lambdas([0.1, 0.1, 0.1, 0.1, 0.1]);
-Ysp = generate_setpoint();
-Ysp = [5*ones(50,1); 8*ones(50,1); 4.5*ones(100,1)];
+Ysp = [5*ones(30,1); 8*ones(40,1); 4.5*ones(30,1)];
 folder_name = 'simple/la';
-% folder_name = '1 05 1 02 1';
-% Ysp = (Ysp-mean(Ysp))/20+7;
-% Ysp = random_signal(500, 100, [6.9, 7.1], 1);
 model1_a = simulation(fc, Ysp,1);
 model1_a.plot();
-%model1_a.save_csv(['../wykresy/ph/',folder_name,'/analityczny.csv']);
+model1_a.save_csv(['../wykresy/ph/',folder_name,'/analityczny.csv']);
 
 fc.output_limit = [0,0];
 model_al = simulation(fc, Ysp,1);
@@ -89,16 +80,6 @@ fc.sim_model = WienerModel(1);
 model_mlrn_full_w = simulation(fc, Ysp,1);
 model_mlrn_full_w.save_csv(['../wykresy/ph/',folder_name,'/mlrn.csv']);
 
-% fc.reset();
-% fc.numeric = true;
-% fc.multi_lin = true;
-% fc.use_full_steering = true;
-% fc.iterations = 1;
-% fc.predict_lambdas = 1;
-% fc.sim_model = WienerModel(1);
-% model1_mlrn_full_pl = simulation(fc, Ysp,1);
-% model1_mlrn_full_pl.save_csv('mlrnfullpl_01_1_01_1_01.csv');
-
 fc.reset();
 fc.numeric = true;
 fc.use_full_steering = true;
@@ -108,3 +89,4 @@ fc.iterations = 1;
 fc.sim_model = Model(zeros(500,1));
 model1_n_real_model = simulation(fc, Ysp,1);
 model1_n_real_model.save_csv(['../wykresy/ph/',folder_name,'/real.csv']);
+

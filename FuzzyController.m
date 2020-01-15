@@ -111,7 +111,7 @@ classdef FuzzyController < handle
                     end
                     free_response = obj.sim_model.y(current_model.k+1:current_model.k+D);
                     steering = local_DMC.get_steering(current_model, free_response);
-                    obj.planned_steering(:,1) = steering(1)*ones(N,1);
+                    obj.planned_steering(1:N,1) = steering(1)*ones(N,1);
                 else
                     for iteration = 1:obj.iterations
                         if current_model.k == 170
@@ -300,11 +300,17 @@ classdef FuzzyController < handle
                     obj.sim_model.copy_state(current_model);
                     for t=1:obj.lim_samples+obj.params.output_delay
                         obj.sim_model.update(up(1,:));
+                        future_local_s = obj.sim_model.get_local_s();
+                        local_s(t) = future_local_s(t);
                     end
-                    Y0 = obj.sim_model.y(current_model.k+1:current_model.k+obj.lim_samples+obj.params.output_delay);
+                    Y0real = obj.sim_model.y(current_model.k+1:current_model.k+obj.lim_samples+obj.params.output_delay);
+                    Y0 = Y0real;
                 end
                 max_du = 99999;
                 min_du = -99999;
+                if current_model.k == 63
+                    a=1
+                end
                 for k=obj.params.output_delay+1:obj.lim_samples+obj.params.output_delay
                     if local_s(k)>0
                         max_du_temp = (upper_limit-Y0(k))/local_s(k);

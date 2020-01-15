@@ -34,7 +34,7 @@ classdef WienerModel < StepRespModel
             obj.y_in = obj.params.u_nominal(1) *ones(500,1);
             obj.model_idx = model_idx;
             % wyznaczanie charakterystyki statycznej
-            samples = 100;
+            samples = 1000;
             u = repmat(params.u_nominal, [samples, 1]);
             u(:,1) = [1:samples]/samples*(params.u_max(1)-params.u_min(1))+params.u_min(1);
             obj.static_char = zeros(samples,1);
