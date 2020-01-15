@@ -66,7 +66,7 @@ classdef Model2 < handle
             else
                 x = (-k1-u/V+sqrt((k1+u/V)^2+4*k3*u*Caf/V))/2/k3;
             end
-            y = k1*x/(k2+u/V);
+            y=max(k1*x/(k2+u/V),0);
         end
         function [u,y] = static_char(obj, samples)
             u_min = obj.params.u_min;
@@ -128,13 +128,16 @@ classdef Model2 < handle
         end
         
         function obj = save_csv(obj, filename)
-            column_names = {};
+            column_names = {'t'};
+            t=[1:obj.k]*obj.params.Ts;
             for u_idx = 1:size(obj.u,2)
-                column_names{u_idx} = ['u', num2str(u_idx)];
+                column_names{u_idx+1} = ['u', num2str(u_idx)];
             end
+            
             column_names{length(column_names)+1} = 'y';
             column_names{length(column_names)+1} = 'ysp';
-            csvwrite_with_headers(filename, [obj.u, obj.y, obj.Ysp], column_names);
+            
+            csvwrite_with_headers(filename, [t', obj.u*3600, obj.y, obj.Ysp], column_names);
         end
     end
 end

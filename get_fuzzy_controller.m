@@ -1,8 +1,11 @@
 function [fc, fm] = get_fuzzy_controller(op_points, lambdas, step_sizes, membership_fun, Nu, model_idx)
 clear controllers;
 clear diffeq_models;
-
-D = 80;
+if model_idx == 1
+    D = 80;
+else
+    D = 100;
+end
 N = D;
 
 if length(step_sizes) == 1
@@ -18,8 +21,9 @@ if length(step_sizes) == 1
             s(:,1)=step1;
             s(:,2)=step2;
             diff_eq_model = get_local_DEM(op_points(op_point_idx), 1, 1);
-            step_model = StepRespModel(s, step_size, ModelParams());
+            step_model = StepRespModel(s, step_size, u0, ModelParams());
             diff_eq_model.s = step_model.s1;
+            params = ModelParams();
         else
             u0 = static_inv2(op_points(op_point_idx));
             [~, step1, u1] = step(u0, step_size, D+1, model_idx);
@@ -27,8 +31,9 @@ if length(step_sizes) == 1
             s(:,1)=step1;
             diff_eq_model = get_local_DEM(op_points(op_point_idx), 1, 2);
             
-            step_model = StepRespModel(s, step_size, Model2Params());
+            step_model = StepRespModel(s, step_size, u0, Model2Params());
             diff_eq_model.s = step_model.s1;
+            params = Model2Params();
         end
         % wyznaczenie odpowiedzi skokowych z danego punktu pracy dla sygna³u
         % steruj¹cego u1 i zak³ócenia u2
@@ -38,9 +43,11 @@ if length(step_sizes) == 1
         % odpowiedzi skokowych
         
         controllers(op_point_idx)=DMC(step_model,N,Nu,D,lambdas(op_point_idx));
-        diffeq_models(op_point_idx) = diff_eq_model;
+        %diffeq_models(op_point_idx) = diff_eq_model;
+        diffeq_models(op_point_idx) = step_model;
     end
     fm = FuzzyModel(diffeq_models, membership_fun, model_idx);
+    fm.params = params;
     fc = FuzzyController(controllers, membership_fun, fm, model_idx);
     
 else

@@ -49,9 +49,31 @@ classdef DiffEqModel < handle
         end
         function y=update(obj, u)
             obj.u(obj.k) = u(1);
+            yp = obj.get_yp(obj.na);
             obj.k = obj.k+1;
+            up = obj.get_up(obj.nb+obj.params.output_delay);
+            up = up(obj.params.output_delay+1:end);
             obj.y(obj.k) = obj.a' * obj.y(obj.k-1:-1:obj.k-obj.na) + obj.b * obj.u(obj.k-1:-1:obj.k-obj.nb) + obj.const;
+            obj.y(obj.k) = obj.a' * yp + obj.b * up + obj.const;
             y = obj.y(obj.k);
+        end
+        function up = get_up(obj, length)
+            if obj.k == 1
+                up = repmat(obj.params.u_nominal, [length,1]);
+            else
+                up = obj.u(obj.k-1:-1:1, :);
+                up = [up;repmat(obj.params.u_nominal(1), [length,1])];
+                up = up(1:length,:);
+            end
+        end
+        function yp = get_yp(obj, length)
+            if obj.k == 1
+                yp = repmat(obj.params.y_nominal, [length,1]);
+            else
+                yp = obj.y(obj.k:-1:1);
+                yp = [yp;repmat(obj.params.y_nominal, [length,1])];
+                yp = yp(1:length,:);
+            end
         end
         function obj = reset(obj)
             obj.k = 1;

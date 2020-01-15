@@ -7,13 +7,15 @@ op_points = [0.2, 1];
 D = 80;
 N = D;
 Nu = 40;
-lambda_init = [5000, 5000, 5000];
+lambda_init = [3600, 3600, 5000];
 step_size = 0.0005;
 
 [fc, fm] = get_fuzzy_controller(op_points, lambda_init, step_size, @normal, Nu, 2);
 fc.numeric = false;
 fc.set_sigmas([0.4,0.4,0.4]);
 fm.set_sigmas([0.4,0.4,0.4]);
+fc.set_sigmas([0.3,0.3, 0.3]);
+fm.set_sigmas([0.3,0.3, 0.3]);
 % fc.set_sigmas([1.1,0.38,1.2,0.43,1.53]);
 
 params = Model2Params();
@@ -68,7 +70,7 @@ fc.predict_lambdas = 0;
 fc.iterations = 1;
 fc.sim_model = fm;
 model_mlrn_full = simulation(fc, Ysp, 2);
-model_mlrn_full.save_csv('../wykresy/druga/02 1 5000 5000/mlrnfmf.csv');
+model_mlrn_full.save_csv('../wykresy/vdv/mlrnfmf.csv');
 
 fc.reset();
 fc.numeric = true;

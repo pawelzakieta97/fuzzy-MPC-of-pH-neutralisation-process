@@ -38,7 +38,7 @@ classdef DMC_WM < handle
             [~,s,~] = step(obj.params.u_nominal, step_size, D, model_idx);
             amp = s(length(s))-s(1);
             obj.static_inv = static_inv;
-            linear_model = StepRespModel(s, amp, obj.params);
+            linear_model = StepRespModel(s, amp, obj.params.u_nominal(1), obj.params);
             obj.linear_model = linear_model;
             obj.N = N;
             obj.Nu = Nu; 

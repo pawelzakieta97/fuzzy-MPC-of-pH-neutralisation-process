@@ -4,6 +4,7 @@ classdef StepRespModel < handle
         s1;
         s2;
         op_point;
+        u0;
         step_size;
         params;
         k=1;
@@ -17,12 +18,13 @@ classdef StepRespModel < handle
         sigma = 1;
     end
     methods
-        function obj=StepRespModel(step_responses, step_size, params)
+        function obj=StepRespModel(step_responses, step_size, u0, params)
             if nargin<2
                 obj.params = ModelParams();
             else
                 obj.params = params;
             end
+            obj.u0 = u0;
             obj.op_point = step_responses(1,1);
             obj.step_size = step_size;
             obj.amplification = (step_responses(length(step_responses), 1) - step_responses(1,1))/obj.step_size;
@@ -39,7 +41,7 @@ classdef StepRespModel < handle
             obj.Mp2 = generateMp(1,obj.D,obj.s(:,2));
 
         end
-        function y=update(obj, u)
+        function y=update1(obj, u)
             obj.u(obj.k, :) = u;
             obj.k = obj.k + 1;
             obj.recent_u = circshift(obj.recent_u, 1);
@@ -48,6 +50,16 @@ classdef StepRespModel < handle
             up = obj.get_up(obj.D);
             du = up(1:obj.D-1, :)-up(2:obj.D, :);
             y = obj.y(obj.k-1) + obj.Mp1*du(:,1) + obj.Mp2*du(:,2);
+            obj.y(obj.k) = y;
+        end
+        function y=update(obj, u)
+            obj.u(obj.k, :) = u;
+            obj.k = obj.k + 1;
+            du = obj.recent_u(1:obj.D-1, :)-obj.recent_u(2:obj.D, :);
+            up = obj.get_up(obj.D);
+            du = up(1:obj.D-1, :)-up(2:obj.D, :);
+            y = obj.op_point+(up(obj.D,1)-obj.u0(1))*obj.s1(obj.D)+...
+                obj.s1(1:obj.D-1)'*du(:,1);
             obj.y(obj.k) = y;
         end
         function obj = reset(obj)

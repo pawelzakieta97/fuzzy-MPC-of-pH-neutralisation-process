@@ -96,14 +96,27 @@ classdef Model < handle
         end
         
         function obj = save_csv(obj, filename)
-            column_names = {};
+            column_names = {'t'};
+            t=[1:obj.k]*obj.params.Ts;
             for u_idx = 1:size(obj.u,2)
-                column_names{u_idx} = ['u', num2str(u_idx)];
+                column_names{u_idx+1} = ['u', num2str(u_idx)];
             end
+            
             column_names{length(column_names)+1} = 'y';
             column_names{length(column_names)+1} = 'ysp';
-            csvwrite_with_headers(filename, [obj.u, obj.y, obj.Ysp], column_names);
+            
+            csvwrite_with_headers(filename, [t', obj.u, obj.y, obj.Ysp], column_names);
         end
+        
+        function m = clone(obj)
+            m = Model(obj.Ysp);
+            m.x = obj.x;
+            m.y = obj.y;
+            m.u = obj.u;
+            m.params = obj.params;
+            m.k = obj.k;
+        end
+        
     end
 end
             

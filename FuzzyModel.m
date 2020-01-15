@@ -10,6 +10,7 @@ classdef FuzzyModel < handle
         params;
         free_responses;
         model_idx;
+        y_ref;
 %         static_output;
     end
     methods
@@ -47,15 +48,22 @@ classdef FuzzyModel < handle
             total_weight = 0;
             y = 0;
             for i=1:length(obj.linear_models)
-                weight = gaussmf(obj.y(obj.k), [obj.linear_models(i).sigma, obj.linear_models(i).op_point]);
+                window = 0;
+                current_op_point = mean(obj.y(obj.k:obj.k+window));
+                %weight = gaussmf(obj.y(obj.k), [obj.linear_models(i).sigma, obj.linear_models(i).op_point]);
+                weight = gaussmf(current_op_point, [obj.linear_models(i).sigma, obj.linear_models(i).op_point]);
                 obj.weights(obj.k, i) = weight;
                 total_weight = total_weight + weight;
                 y = y + obj.linear_models(i).update(u)*weight;
             end
+            
             obj.weights(obj.k, :) = obj.weights(obj.k, :)/total_weight;
             y = y/total_weight;
             obj.k = obj.k+1;
             obj.y(obj.k) = y;
+            for i=1:length(obj.linear_models)
+                obj.linear_models(i).y = obj.y;
+            end
         end
         
         function y = update_custom(obj, u)
@@ -230,7 +238,7 @@ classdef FuzzyModel < handle
                 hold on;
                 stairs(obj.y(1:length(model.y)));
                 title('celnoœæ modelu')
-                legend('rzeczywisty przebieg', 'modelowany przebieg');
+                legend('rzeczywisty przebieg', 'modelowany przebieg', 'Location','southeast');
                 
                 subplot(3,1,2);
                 stairs(obj.u(:,1));
@@ -250,11 +258,22 @@ classdef FuzzyModel < handle
             figure
             subplot(2,1,1);
             plot(obj.y);
+            hold on;
+            plot(obj.y_ref);
             legend('setpoint', 'output', 'Location','southeast');
 
             subplot(2,1,2); 
             plot(obj.u(:,1));
             legend('u1');
+        end
+        
+        function obj = save_csv(obj, filename)
+            column_names = {'t'};
+            t=[1:obj.k]*obj.params.Ts;
+            column_names{length(column_names)+1} = 'y';
+            column_names{length(column_names)+1} = 'yref';
+            
+            csvwrite_with_headers(filename, [t', obj.y, obj.y_ref], column_names);
         end
     end
 end

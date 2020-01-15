@@ -23,6 +23,8 @@ classdef FuzzyController < handle
         limit_type = 1;
         lim_samples = 1;
         static_inv;
+        lim_use_sim_model = 0;
+        linearize_sim_model = 0;
     end
     methods
         function obj = FuzzyController(controllers, membership_fun, fm, model_idx)
@@ -59,13 +61,13 @@ classdef FuzzyController < handle
             D = 80;
             obj.step_responses = zeros(500,D);
             obj.free_responses = zeros(500,500);
-            obj.planned_steering = repmat(obj.params.u_nominal,[80,1]);
+            obj.planned_steering = repmat(obj.params.u_nominal,[100,1]);
         end
         function x=reset(obj)
             D = 80;
             obj.free_responses = zeros(500,500);
             obj.step_responses = zeros(500,D);
-            obj.planned_steering = repmat(obj.params.u_nominal,[80,1]);
+            obj.planned_steering = repmat(obj.params.u_nominal,[100,1]);
         end
         function exp_step = approximate_steering(obj, model)
             exp_step = obj.main_controller.get_steering(model) - model.get_up(1);
@@ -99,7 +101,7 @@ classdef FuzzyController < handle
                 local_lambda = local_lambda + weight * obj.controllers(i).lambda;
             end
             local_lambda = local_lambda/total_weight;
-            local_step_model = StepRespModel([0; local_s]+current_model.y(current_model.k), 1, ModelParams());
+            local_step_model = StepRespModel([0; local_s]+current_model.y(current_model.k), 1, obj.params.u_nominal, ModelParams());
             local_DMC = DMC(local_step_model,N,Nu,D,local_lambda);
             if obj.use_full_steering
                 if obj.iterations == 0
@@ -107,7 +109,7 @@ classdef FuzzyController < handle
                     for t=1:N
                         obj.sim_model.update(obj.planned_steering(t,:));
                     end
-                    free_response = obj.sim_model.y(current_model.k+1:current_model.k+80);
+                    free_response = obj.sim_model.y(current_model.k+1:current_model.k+D);
                     steering = local_DMC.get_steering(current_model, free_response);
                     obj.planned_steering(:,1) = steering(1)*ones(N,1);
                 else
@@ -119,7 +121,7 @@ classdef FuzzyController < handle
                         for t=1:N
                             obj.sim_model.update(obj.planned_steering(t,:));
                         end
-                        free_response = obj.sim_model.y(current_model.k+1:current_model.k+80);
+                        free_response = obj.sim_model.y(current_model.k+1:current_model.k+D);
                         planned_u1 = obj.planned_steering(1:Nu, 1);
                         last_u = current_model.get_up(1);
                         planned_u1 = [last_u(1); planned_u1];
@@ -172,7 +174,7 @@ classdef FuzzyController < handle
                         local_step_models(t) = StepRespModel([0;local_s]+current_model.y(current_model.k), 1, ModelParams());
                     end
                     dmc_ml = DMC_ML(local_step_models,N,Nu,D,local_lambda);
-                    free_response = obj.sim_model.y(current_model.k+1:current_model.k+80);
+                    free_response = obj.sim_model.y(current_model.k+1:current_model.k+N);
                     steering = dmc_ml.get_full_steering(current_model, free_response);
                     obj.planned_steering(:,1) = steering(1)*ones(N,1);
                 else
@@ -182,13 +184,13 @@ classdef FuzzyController < handle
                         for t=1:N
                             obj.sim_model.update(obj.planned_steering(t,:));
                             local_s = obj.get_local_s(obj.sim_model);
-                            local_step_models(t) = StepRespModel(local_s+current_model.y(current_model.k), 1, ModelParams());
+                            local_step_models(t) = StepRespModel(local_s+current_model.y(current_model.k), 1, obj.params.u_nominal, ModelParams());
                             if obj.predict_lambdas && t<=Nu
                                 local_lambda(t,t)=obj.get_local_lambda(obj.sim_model);
                             end
                         end
                         dmc_ml = DMC_ML(local_step_models,N,Nu,D,local_lambda);
-                        free_response = obj.sim_model.y(current_model.k+1:current_model.k+80);
+                        free_response = obj.sim_model.y(current_model.k+1:current_model.k+N);
                         planned_u1 = obj.planned_steering(1:Nu, 1);
                         last_u = current_model.get_up(1);
                         planned_u1 = [last_u(1); planned_u1];
@@ -241,15 +243,20 @@ classdef FuzzyController < handle
         end
         
         function local_s = get_local_s(obj, current_model)
-            total_weight = 0;
-            local_s = obj.controllers(1).linear_model.s1*0;
-            for i=1:length(obj.controllers)
-                weight = obj.membership_fun(obj.controllers(i), current_model);
-                obj.weights(current_model.k, i) = weight;
-                total_weight = total_weight + weight;
-                local_s = local_s + weight * obj.controllers(i).linear_model.s1;
+            if obj.linearize_sim_model
+                obj.sim_model.copy_state(current_model);
+                local_s = obj.sim_model.get_local_s();
+            else
+                total_weight = 0;
+                local_s = obj.controllers(1).linear_model.s1*0;
+                for i=1:length(obj.controllers)
+                    weight = obj.membership_fun(obj.controllers(i), current_model);
+                    obj.weights(current_model.k, i) = weight;
+                    total_weight = total_weight + weight;
+                    local_s = local_s + weight * obj.controllers(i).linear_model.s1;
+                end
+                local_s = local_s/total_weight;
             end
-            local_s = local_s/total_weight;
         end
         
         function local_lambda = get_local_lambda(obj, current_model)
@@ -284,14 +291,18 @@ classdef FuzzyController < handle
             end
             if obj.limit_type == 2
                 local_s = obj.get_local_s(current_model);
-                if local_s(10) == 0
-                    a=1;
-                end
                 D = obj.controllers(1).D;
                 up = current_model.get_up(D);
                 du = up(1:end-1, 1)-up(2:end, 1);
                 Mp = generateMp(obj.lim_samples+obj.params.output_delay, D, local_s);
                 Y0 = current_model.y(current_model.k)+Mp*du;
+                if obj.lim_use_sim_model
+                    obj.sim_model.copy_state(current_model);
+                    for t=1:obj.lim_samples+obj.params.output_delay
+                        obj.sim_model.update(up(1,:));
+                    end
+                    Y0 = obj.sim_model.y(current_model.k+1:current_model.k+obj.lim_samples+obj.params.output_delay);
+                end
                 max_du = 99999;
                 min_du = -99999;
                 for k=obj.params.output_delay+1:obj.lim_samples+obj.params.output_delay
@@ -341,21 +352,66 @@ classdef FuzzyController < handle
             end
         end
         
-        function obj = plot_mf(obj, samples)
+        function obj = plot_mf(obj, samples, normalize)
             m = Model([]);
             figure;
             hold on;
+            if nargin<3
+                normalize = 1;
+            end
+            w = zeros(samples, length(obj.controllers));
+            y = zeros(samples,1);
+            for i=1:samples
+                for k=1:length(obj.controllers)
+                    
+                    y(i) = obj.params.y_min+(obj.params.y_max-obj.params.y_min)*i/samples;
+                    m.y(m.k) = y(i);
+                    w(i, k) = obj.membership_fun(obj.controllers(k), m);
+                end
+                if normalize
+                    w(i,:) = w(i,:)/sum(w(i,:));
+                end
+            end
             for k=1:length(obj.controllers)
-                w = zeros(samples, length(obj.controllers));
+                plot(y, w(:,k));
+            end
+            hold off;
+        end
+        
+        function obj = save_csv_mf(obj, filename, normalize)
+            if nargin<3
+                normalize = 1;
+            end
+            m = Model([]);
+            column_names = {'y'};
+            samples = 100;
+            w = zeros(samples, length(obj.controllers));
+            for k=1:length(obj.controllers)
+                column_names{k+1} = ['w', num2str(k)];
                 y = zeros(samples,1);
                 for i=1:samples
                     y(i) = obj.params.y_min+(obj.params.y_max-obj.params.y_min)*i/samples;
                     m.y(m.k) = y(i);
                     w(i, k) = obj.membership_fun(obj.controllers(k), m);
                 end
-                plot(y, w(:,k));
             end
-            hold off;
+            for i = 1:length(y)
+                w(i,:) = w(i,:)/sum(w(i,:));
+            end
+            csvwrite_with_headers(filename, [y, w], column_names);
+        end
+        
+        function obj = save_csv_s(obj, filename)
+            m = Model([]);
+            column_names = {'t'};
+            D = length(obj.controllers(1).linear_model.s1);
+            s = zeros(D, length(obj.controllers));
+            t = [1:D]*obj.controllers(1).params.output_delay;
+            for k=1:length(obj.controllers)
+                column_names{k+1} = ['s', num2str(k)];
+                s(:, k) = obj.controllers(k).linear_model.s1;
+            end
+            csvwrite_with_headers(filename, [t', s], column_names);
         end
     end
 end
