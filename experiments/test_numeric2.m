@@ -13,7 +13,7 @@ Nu = 40;
 lambda_init = [3600, 3600, 3600];
 step_size = 0.0005;
 
-[fc, fm] = get_fuzzy_controller(op_points, lambda_init, step_size, @normal, Nu, 2);
+[fc, fm] = get_fuzzy_controller(op_points, lambda_init, step_size, @normal, Nu, 2, 1);
 fc.numeric = false;
 fc.set_sigmas([0.4,0.4,0.4]);
 fm.set_sigmas([0.4,0.4,0.4]);
@@ -22,6 +22,7 @@ fm.set_sigmas([0.3,0.3, 0.3]);
 
 fc.set_sigmas([0.3,0.2, 0.1]);
 fm.set_sigmas([0.3,0.2, 0.1]);
+sc = fm.generate_static_char(100);
 % fc.set_sigmas([1.1,0.38,1.2,0.43,1.53]);
 
 params = Model2Params();

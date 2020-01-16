@@ -1,4 +1,4 @@
-function [fc, fm] = get_fuzzy_controller(op_points, lambdas, step_sizes, membership_fun, Nu, model_idx)
+function [fc, fm] = get_fuzzy_controller(op_points, lambdas, step_sizes, membership_fun, Nu, model_idx, fwm)
 clear controllers;
 clear diffeq_models;
 if model_idx == 1
@@ -7,7 +7,9 @@ else
     D = 100;
 end
 N = D;
-
+if nargin < 7
+    fwm = 0
+end
 if length(step_sizes) == 1
     step_size = step_sizes(1);
     for op_point_idx=1:length(op_points)
@@ -46,7 +48,11 @@ if length(step_sizes) == 1
         diffeq_models(op_point_idx) = diff_eq_model;
         %diffeq_models(op_point_idx) = step_model;
     end
-    fm = FuzzyModel(diffeq_models, membership_fun, model_idx);
+    if fwm
+        fm = FuzzyWienerModel(diffeq_models, membership_fun, model_idx);
+    else
+        fm = FuzzyModel(diffeq_models, membership_fun, model_idx);
+    end
     fm.params = params;
     fc = FuzzyController(controllers, membership_fun, fm, model_idx);
     
