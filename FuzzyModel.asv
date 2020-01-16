@@ -14,7 +14,7 @@ classdef FuzzyModel < handle
         d=0;
         prev_prediction;
 %         static_output;
-        static_scaling;
+        static_char;
     end
     methods
         function obj = FuzzyModel(models, membership_fun, model_idx)

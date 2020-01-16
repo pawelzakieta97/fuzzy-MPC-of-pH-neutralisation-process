@@ -25,6 +25,8 @@ classdef FuzzyController < handle
         static_inv;
         lim_use_sim_model = 0;
         linearize_sim_model = 0;
+        prev_prediction=0;
+        d = 0;
     end
     methods
         function obj = FuzzyController(controllers, membership_fun, fm, model_idx)
@@ -64,6 +66,7 @@ classdef FuzzyController < handle
             obj.planned_steering = repmat(obj.params.u_nominal,[100,1]);
         end
         function x=reset(obj)
+            obj.prev_prediction = 0;
             D = 80;
             obj.free_responses = zeros(500,500);
             obj.step_responses = zeros(500,D);
@@ -103,25 +106,28 @@ classdef FuzzyController < handle
             local_lambda = local_lambda/total_weight;
             local_step_model = StepRespModel([0; local_s]+current_model.y(current_model.k), 1, obj.params.u_nominal, ModelParams());
             local_DMC = DMC(local_step_model,N,Nu,D,local_lambda);
+            % oszacowanie bledu modelowania
+            if obj.prev_prediction ~= 0
+                obj.d = current_model.y(current_model.k)-obj.prev_prediction;
+            end
             if obj.use_full_steering
                 if obj.iterations == 0
                     obj.sim_model.copy_state(current_model);
+                    if current_model.k == 60
+                        a=1;
+                    end
                     for t=1:N
                         obj.sim_model.update(obj.planned_steering(t,:));
                     end
                     free_response = obj.sim_model.y(current_model.k+1:current_model.k+D);
-                    steering = local_DMC.get_steering(current_model, free_response);
+                    % correction = [1:length(free_response)]*d;
+                    steering = local_DMC.get_steering(current_model, free_response+obj.d);
                     obj.planned_steering(1:N,1) = steering(1)*ones(N,1);
                 else
                     for iteration = 1:obj.iterations
-                        if current_model.k == 170
-                            a=1;
-                        end
+                        
                         obj.sim_model.copy_state(current_model);
                         for t=1:N
-                            if obj.sim_model.linear_models(1).k>length(obj.sim_model.linear_models(1).y)
-                                a=1;
-                            end
                             obj.sim_model.update(obj.planned_steering(t,:));
                         end
                         free_response = obj.sim_model.y(current_model.k+1:current_model.k+D);
@@ -129,7 +135,7 @@ classdef FuzzyController < handle
                         last_u = current_model.get_up(1);
                         planned_u1 = [last_u(1); planned_u1];
                         planned_steps = planned_u1(2:Nu+1) - planned_u1(1:Nu);
-                        steering = local_DMC.get_full_steering(current_model, free_response, planned_steps);
+                        steering = local_DMC.get_full_steering(current_model, free_response+obj.d, planned_steps);
                         obj.planned_steering(1:Nu, 1)= steering(1:Nu);
                         obj.planned_steering(Nu+1:N,1) = steering(Nu)*ones(N-Nu,1);
                         obj.planned_steering = min(max(obj.planned_steering, obj.params.u_min(1)),obj.params.u_max(1));
@@ -146,6 +152,7 @@ classdef FuzzyController < handle
                     obj.planned_steering(Nu:N,1) = steering(Nu)*ones(N-Nu+1,1);
                     obj.planned_steering = min(max(obj.planned_steering, obj.params.u_min(1)),obj.params.u_max(1));
                 end
+                obj.prev_prediction = free_response(1);
             else
                 steering = local_DMC.get_steering(current_model);
             end
@@ -422,9 +429,12 @@ classdef FuzzyController < handle
             D = length(obj.controllers(1).linear_model.s1);
             s = zeros(D, length(obj.controllers));
             t = [1:D]*obj.controllers(1).params.output_delay;
+            figure;
+            hold on;
             for k=1:length(obj.controllers)
                 column_names{k+1} = ['s', num2str(k)];
                 s(:, k) = obj.controllers(k).linear_model.s1;
+                plot(s(:,k));
             end
             csvwrite_with_headers(filename, [t', s], column_names);
         end

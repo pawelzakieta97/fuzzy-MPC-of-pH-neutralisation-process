@@ -60,7 +60,11 @@ classdef DiffEqModel < handle
         function y=update(obj, u)
             obj.u(obj.k) = u(1);
             yp = obj.get_yp(obj.na);
+            if obj.k == 252
+                a=1
+            end
             obj.k = obj.k+1;
+            
             up = obj.get_up(obj.nb+obj.params.output_delay);
             up = up(obj.params.output_delay+1:end);
             %obj.y(obj.k) = obj.a' * obj.y(obj.k-1:-1:obj.k-obj.na) + obj.b * obj.u(obj.k-1:-1:obj.k-obj.nb) + obj.const;
