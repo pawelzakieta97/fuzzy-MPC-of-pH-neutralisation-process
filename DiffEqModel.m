@@ -24,38 +24,60 @@ classdef DiffEqModel < handle
         sloper;
     end
     methods
-        function obj=DiffEqModel(u,y,nb,na, params)
-            if nargin<5
-                params = ModelParams();
+        function obj=DiffEqModel(u,y,nb,na, params, init)
+            if nargin <6
+                init = 1;
             end
-            obj.params = params;
-            obj.op_point = mean(y);
-            obj.op_point_u = mean(u);
-            obj.nb = nb;
-            obj.na = na;
-            u = u(1:min(length(u), length(y)));
-            y = y(1:min(length(u), length(y)));
-            y = y(1+obj.params.output_delay:end);
-            u = u(1:length(y));
-            sim_len = length(u);
-            M = zeros(sim_len, na+nb+1);
-            for k=max(nb, na)+1:sim_len
-                y_row = y(k-1:-1:k-na);
-                u_row = u(k-1:-1:k-nb);
-                M(k,:)=[y_row', u_row', 1];
+            if init
+                if nargin<5
+                    params = ModelParams();
+                end
+                obj.params = params;
+                obj.op_point = mean(y);
+                obj.op_point_u = mean(u);
+                obj.nb = nb;
+                obj.na = na;
+                u = u(1:min(length(u), length(y)));
+                y = y(1:min(length(u), length(y)));
+                y = y(1+obj.params.output_delay:end);
+                u = u(1:length(y));
+                sim_len = length(u);
+                M = zeros(sim_len, na+nb+1);
+                for k=max(nb, na)+1:sim_len
+                    y_row = y(k-1:-1:k-na);
+                    u_row = u(k-1:-1:k-nb);
+                    M(k,:)=[y_row', u_row', 1];
+                end
+
+                M = M(max(na, nb)+1:end, :);
+                y_real = y(max(na, nb)+1:end);
+                w=(M'*M)^(-1)*M'*y_real;
+                obj.a = w(1:na);
+                obj.b = w(na+1:na+nb);
+                obj.const = w(na+nb+1);
+                obj.y = obj.params.y_nominal*ones(500,1);
+                obj.u = obj.params.u_nominal(1)*ones(500,1);
+                %obj.s = obj.step(100);
+                obj.s1 = obj.step(100);
             end
-            
-            M = M(max(na, nb)+1:end, :);
-            y_real = y(max(na, nb)+1:end);
-            w=(M'*M)^(-1)*M'*y_real;
-            obj.a = w(1:na);
-            obj.b = w(na+1:na+nb);
-            obj.const = w(na+nb+1);
-            obj.y = obj.params.y_nominal*ones(500,1);
-            obj.u = obj.params.u_nominal(1)*ones(500,1);
-            %obj.s = obj.step(100);
-            obj.s1 = obj.step(100);
-            
+        end
+        function dem2 = clone(obj)
+            dem2 = DiffEqModel(1,1,1,1, 1, 0);
+            dem2.params = obj.params;
+            dem2.a = obj.a;
+            dem2.b = obj.b;
+            dem2.const = obj.const;
+            dem2.y = obj.y;
+            dem2.u = obj.u;
+            dem2.k = obj.k;
+            dem2.na = obj.na;
+            dem2.nb = obj.nb;
+            dem2.D = obj.D;
+            dem2.Mp1 = obj.Mp1;
+            dem2.Mp2 = obj.Mp2;
+            dem2.op_point = obj.op_point;
+            dem2.op_point_u = obj.op_point_u;
+            dem2.sigma = obj.sigma;
         end
         function y=update(obj, u)
             obj.u(obj.k) = u(1);
