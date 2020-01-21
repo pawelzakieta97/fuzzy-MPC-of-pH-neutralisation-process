@@ -1,6 +1,6 @@
 addpath('../membership_functions/');
 addpath('../');
-op_points = [0.2, 0.9, 1.2];
+op_points = [0.5, 0.9, 1.2];
 % op_points = [1.2]
 % op_points = [1.12];
 %op_points = [0.2, 1];
@@ -20,7 +20,11 @@ fm.set_sigmas([0.3,0.3, 0.3]);
 fc.set_sigmas([0.3,0.2, 0.1]);
 fm.set_sigmas([0.3,0.2, 0.1]);
 sc = fm.generate_static_char(100);
+u = 1/100*[1:100]*(fm.params.u_max(1)- fm.params.u_min(1))+fm.params.u_min(1);
+u = u * 3600;
+sc(1) = 0.05;
 plot(sc);
+csvwrite_with_headers('../wykresy/vdv/identification/static.csv', [u',sc,fm.static_char], {'u','y_model', 'y_real'});
 % fc.set_sigmas([1.1,0.38,1.2,0.43,1.53]);
 
 params = Model2Params();
@@ -31,6 +35,23 @@ range = [op_points(1)-0.03, op_points(1)+0.03];
 % Ysp = random_signal(500, 200, [0.45, 0.55], 1);
 model_a = simulation(fc, Ysp,2);
 fm.verify(model_a,1);
+fm.y_ref = model_a.y;
+fm.save_csv('../wykresy/vdv/identification/fwm.csv');
+
+wm = WienerModel(2);
+wm.verify(model_a,1);
+wm.y_ref = model_a.y;
+wm.save_csv('../wykresy/vdv/identification/wm.csv');
 
 
+[fc1, fm1] = get_fuzzy_controller(op_points, lambda_init, step_size, @normal, Nu, 2, 0);
+fc.numeric = false;
 
+fc1.set_sigmas([0.3,0.3, 0.3]);
+fm1.set_sigmas([0.3,0.3, 0.3]);
+
+fc1.set_sigmas([0.3,0.2, 0.1]);
+fm1.set_sigmas([0.3,0.2, 0.1]);
+fm1.verify(model_a,1);
+fm1.y_ref = model_a.y;
+fm1.save_csv('../wykresy/vdv/identification/fm.csv');

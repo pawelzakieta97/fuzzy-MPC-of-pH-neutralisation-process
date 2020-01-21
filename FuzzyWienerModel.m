@@ -109,6 +109,17 @@ classdef FuzzyWienerModel < handle
             obj.y(obj.k) = obj.y_in(obj.k)*multiplier;
         end
         
+        function fwm2 = clone(obj)
+            for lin_idx=1:length(obj.linear_models)
+                models(lin_idx) = obj.linear_models(lin_idx).clone();
+                
+            end
+            fwm2 = FuzzyWienerModel(models, obj.membership_fun, obj.model_idx);
+            fwm.k = obj.k;
+            fwm.u = obj.u;
+            fwm.y_in = obj.y_in;
+        end
+        
         function y_in = update_in(obj, u)
             obj.u(obj.k, :) = u;
             total_weight = 0;
@@ -233,11 +244,11 @@ classdef FuzzyWienerModel < handle
         
         function obj = save_csv(obj, filename)
             column_names = {'t'};
-            t=[1:obj.k]*obj.params.Ts;
+            t=[1:length(obj.y_ref)]*obj.params.Ts;
             column_names{length(column_names)+1} = 'y';
             column_names{length(column_names)+1} = 'yref';
-            
-            csvwrite_with_headers(filename, [t', obj.y, obj.y_ref], column_names);
+            obj.y_ref = obj.y_ref(1:length(obj.y_ref));
+            csvwrite_with_headers(filename, [t', obj.y(1:length(obj.y_ref)), obj.y_ref], column_names);
         end
     end
 end

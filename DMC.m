@@ -63,6 +63,12 @@ classdef DMC < handle
             else
                 dU2 = up(1:D-1, 2) - up(2:D,2);
             end
+            if model.k == 60
+                a=1;
+            end
+            if norm(dU2)>0
+                a=1
+            end
             if nargin<3
                 du = obj.K1sum*(Ysp(model.k) - y) - obj.KMp1*dU1 - obj.KMp2*dU2;
             else

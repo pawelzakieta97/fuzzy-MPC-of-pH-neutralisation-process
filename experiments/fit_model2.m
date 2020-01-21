@@ -1,0 +1,3 @@
+params_init = [0.5, 1, 1.2, 0.3, 0.2, 0.1];
+[params_optimized, error] = fmincon(...
+@(params)model_acc(params), params_init);

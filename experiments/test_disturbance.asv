@@ -3,18 +3,12 @@ addpath('../');
 
 op_points = [3, 4.6, 6.4, 8, 10];
 op_points = [2.96, 4.76, 6.7, 8.19, 10];
-% op_points = [3, 5, 7, 8.5, 10];
-% op_points = [7];
 D = 80;
 N = D;
 Nu = 40;
 lambda_init = [0.1, 1, 0.05, 0.1, 0.1];
 lambda_init = [0.2, 0.5, 0.1, 0.1, 0.1];
 lambda_init = [0.1, 1, 0.1, 1, 0.1];
-% lambda_init = [0.1, 0.1, 0.1, 0.1, 0.1];
-% lambda_init = [0.01, 0.1, 0.02, 1, 0.1];
-% lambda_init = [1];
-%lambda_init = [0.1, 1, 0.2, 10, 1];
 step_size = 0.1;
 
 [fc, fm] = get_fuzzy_controller(op_points, lambda_init, step_size, @normal, Nu, 1);
@@ -23,14 +17,15 @@ fc.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
 fm.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
 fc.update_lambdas([1, 0.5, 1, 0.2, 1]);
 fc.main_model.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
-Ysp = [5*ones(30,1); 8*ones(40,1); 4.5*ones(30,1)];
-folder_name = 'simple/la';
-model1_a = simulation(fc, Ysp,1);
-model1_a.plot();
-%model1_a.save_csv(['../wykresy/ph/',folder_name,'/analityczny.csv']);
 
-fc.output_limit = [0,0];
-model_al = simulation(fc, Ysp,1);
+%Ysp = [5*ones(30,1); 8*ones(40,1); 4.5*ones(30,1)];
+Ysp = [7*ones(100,1)];
+params = ModelParams();
+u_nominal = repmat(params.u_nominal, [100,1]);
+u_nominal(50:100,2) = u_nominal(50:100,2)
+folder_name = 'simple/la';
+model1_a = simulation(fc, Ysp,1, u_nominal, params);
+model1_a.plot();
 
 fc.numeric = true;
 fc.use_full_steering = false;
