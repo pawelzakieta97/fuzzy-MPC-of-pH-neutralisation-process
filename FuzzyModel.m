@@ -15,6 +15,7 @@ classdef FuzzyModel < handle
         prev_prediction;
 %         static_output;
         static_scaling;
+        Ysp;
     end
     methods
         function obj = FuzzyModel(models, membership_fun, model_idx)
@@ -46,6 +47,13 @@ classdef FuzzyModel < handle
             end
         end
         
+        function fm2 = clone(obj)
+            for lin_idx = 1:length(obj.linear_models)
+                models(lin_idx) = obj.linear_models(lin_idx).clone();
+            end
+            fm2 = FuzzyModel(models, obj.membership_fun, obj.model_idx);
+        end
+        
         function y = update(obj, u)
             obj.u(obj.k, :) = u;
             total_weight = 0;
@@ -67,6 +75,7 @@ classdef FuzzyModel < handle
             for i=1:length(obj.linear_models)
                 obj.linear_models(i).y = obj.y;
             end
+            
         end
         function local_s = get_local_s(obj)
             local_s = obj.linear_models(1).s1*0;
@@ -235,6 +244,12 @@ classdef FuzzyModel < handle
                 obj.linear_models(DEC_idx).reset();
             end
         end
+        function obj = set_k(obj, k)
+            obj.k = k;
+            for lin_idx=1:length(obj.linear_models)
+                obj.linear_models(lin_idx).k = k;
+            end
+        end
         function obj=verify(obj, model, plot)
             obj.reset();
             for k=1:model.k
@@ -287,11 +302,10 @@ classdef FuzzyModel < handle
         
         function obj = save_csv(obj, filename)
             column_names = {'t'};
-            t=[1:obj.k]*obj.params.Ts;
+            t=[1:length(obj.y_ref)]*obj.params.Ts;
             column_names{length(column_names)+1} = 'y';
             column_names{length(column_names)+1} = 'yref';
-            
-            csvwrite_with_headers(filename, [t', obj.y, obj.y_ref], column_names);
+            csvwrite_with_headers(filename, [t', obj.y(1:length(obj.y_ref)), obj.y_ref], column_names);
         end
     end
 end

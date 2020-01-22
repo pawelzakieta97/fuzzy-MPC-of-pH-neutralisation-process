@@ -129,6 +129,9 @@ classdef WienerModel < StepRespModel
             plot(obj.u(:,1));
             legend('u1');
         end
+        function obj = set_k(obj, k)
+            obj.k = k;
+        end
         function wm = clone(obj)
             wm = WienerModel(obj.model_idx);
             wm.copy_state(obj);
@@ -136,11 +139,11 @@ classdef WienerModel < StepRespModel
         
         function obj = save_csv(obj, filename)
             column_names = {'t'};
-            t=[1:obj.k]*obj.params.Ts;
+            t=[1:length(obj.y_ref)]*obj.params.Ts;
             column_names{length(column_names)+1} = 'y';
             column_names{length(column_names)+1} = 'yref';
             
-            csvwrite_with_headers(filename, [t', obj.y, obj.y_ref], column_names);
+            csvwrite_with_headers(filename, [t', obj.y(1:length(obj.y_ref)), obj.y_ref], column_names);
         end
     end
 end

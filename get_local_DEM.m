@@ -1,4 +1,7 @@
-function dem = get_local_DEM(y0, signal_idx, model_idx)
+function dem = get_local_DEM(y0, signal_idx, model_idx, normalize)
+if nargin<4
+    normalize =0;
+end
 if nargin<3
     model_idx = 1;
 end
@@ -14,7 +17,15 @@ if model_idx == 1
     u(:, signal_idx) = u1;
     model = Model(zeros(2000,1));
     model.update(u);
-    dem = DiffEqModel(u1(200:end), model.y(200:end), 1, 2, params);
+    u = u(200:end, 1);
+    y = model.y(200:end);
+    if normalize
+        amp_y = max(y) - min(y);
+        amp_u = max(u) - min(u);
+        u = u / amp_u * amp_y;
+        u = u + min(y)-min(u);
+    end
+    dem = DiffEqModel(u, y, 1, 2, params);
 else
     if nargin<2
         signal_idx = 1;
@@ -26,5 +37,13 @@ else
     u(:, signal_idx) = u1;
     model = Model2(zeros(2000,1));
     model.update(u);
-    dem = DiffEqModel(u1(200:end), model.y(200:end), 2, 2, params);
+    u = u(200:end, 1);
+    y = model.y(200:end);
+    if normalize
+        amp_y = max(y) - min(y);
+        amp_u = max(u) - min(u);
+        u = u / amp_u * amp_y;
+        u = u + min(y)-min(u);
+    end
+    dem = DiffEqModel(u, y, 2, 2, params);
 end

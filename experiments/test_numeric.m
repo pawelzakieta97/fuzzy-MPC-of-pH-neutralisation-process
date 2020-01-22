@@ -21,6 +21,7 @@ step_size = 0.1;
 fc.numeric = false;
 fc.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
 fm.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
+fc.main_model.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
 % fc.set_sigmas([1.1,0.38,1.2,0.43,1.53]);
 fc.update_lambdas([1, 0.5, 1, 0.2, 1]);
 % fc.update_lambdas([0.1, 0.1, 0.1, 0.1, 0.1]);
