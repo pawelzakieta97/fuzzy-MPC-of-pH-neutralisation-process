@@ -263,7 +263,9 @@ classdef FuzzyController < handle
                 u = obj.limit_steering(u, current_model);
             end
             obj.main_model.set_k(current_model.k);
-            obj.main_model.update(min(max(u, obj.params.u_min(1)), obj.params.u_max(1)));
+            u0 = obj.main_model.params.u_nominal;
+            u0(1) = min(max(u, obj.params.u_min(1)), obj.params.u_max(1));
+            obj.main_model.update(u0);
         end
         
         function u = get_steering_a(obj, current_model)

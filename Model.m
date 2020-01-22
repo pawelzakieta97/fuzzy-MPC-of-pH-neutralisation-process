@@ -22,6 +22,15 @@ classdef Model < handle
                 obj.Ysp = Ysp;
             end
         end
+        function obj = set_k(obj, k)
+            obj.k = k;
+        end
+        function obj = reset(obj)
+            obj.x = repmat(obj.params.x_nominal, [length(obj.Ysp),1]);
+            obj.y = ones(length(obj.Ysp),1)*obj.params.y_nominal;
+            obj.u = repmat(obj.params.u_nominal, [length(obj.Ysp),1]);
+            obj.k=1;
+        end
         function y=update(obj, u)
             for j=1:size(u,1)
                 obj.u(obj.k, :) = u(j,:);
@@ -95,9 +104,12 @@ classdef Model < handle
             
         end
         
-        function obj = save_csv(obj, filename)
+        function obj = save_csv(obj, filename, range)
+            if nargin<3
+                range = [1, obj.k];
+            end
             column_names = {'t'};
-            t=[1:obj.k]*obj.params.Ts;
+            t=[1:range(2)-range(1)+1]*obj.params.Ts;
             for u_idx = 1:size(obj.u,2)
                 column_names{u_idx+1} = ['u', num2str(u_idx)];
             end
@@ -105,7 +117,11 @@ classdef Model < handle
             column_names{length(column_names)+1} = 'y';
             column_names{length(column_names)+1} = 'ysp';
             
-            csvwrite_with_headers(filename, [t', obj.u, obj.y, obj.Ysp], column_names);
+            csvwrite_with_headers(filename, [t',...
+                obj.u(range(1):range(2),:),...
+                obj.y(range(1):range(2)),...
+                obj.Ysp(range(1):range(2))],...
+            column_names);
         end
         
         function m = clone(obj)

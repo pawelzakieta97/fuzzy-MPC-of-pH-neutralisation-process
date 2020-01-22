@@ -30,7 +30,7 @@ folder_name = 'simple/la';
 
 model1_a = simulation(fc, Ysp,1);
 model1_a.plot();
-%model1_a.save_csv(['../wykresy/ph/',folder_name,'/analityczny.csv']);
+model1_a.save_csv(['../wykresy/ph/',folder_name,'/analityczny.csv']);
 
 fc.output_limit = [0,0];
 model_al = simulation(fc, Ysp,1);
@@ -42,7 +42,7 @@ fc.predict_lambdas = 0;
 fc.iterations = 0;
 fc.sim_model = WienerModel(1);
 model1_sl = simulation(fc, Ysp,1);
-% model1_sl.save_csv(['../wykresy/ph/',folder_name,'/sl.csv']);
+model1_sl.save_csv(['../wykresy/ph/',folder_name,'/sl.csv']);
 
 fc.reset();
 fc.numeric = true;
@@ -52,7 +52,7 @@ fc.predict_lambdas = 0;
 fc.iterations = 1;
 fc.sim_model = fm;
 model1_slrn_fm = simulation(fc, Ysp,1);
-% model1_slrn_fm.save_csv(['../wykresy/ph/',folder_name,'/slrnfm.csv']);
+model1_slrn_fm.save_csv(['../wykresy/ph/',folder_name,'/slrnfm.csv']);
 
 fc.main_model = WienerModel(1);
 fc.reset();
@@ -64,7 +64,7 @@ fc.iterations = 0;
 fc.sim_model = WienerModel(1);
 model1_slrn = simulation(fc, Ysp,1);
 % model1_slrn.plot();
-%model1_slrn.save_csv(['../wykresy/ph/',folder_name,'/slrnwm.csv']);
+model1_slrn.save_csv(['../wykresy/ph/',folder_name,'/slrnwm.csv']);
 
 fc.reset();
 fc.numeric = true;
@@ -74,7 +74,7 @@ fc.predict_lambdas = 0;
 fc.iterations = 1;
 fc.sim_model = WienerModel(1);
 model1_slrn_full = simulation(fc, Ysp,1);
-% model1_slrn_full.save_csv(['../wykresy/ph/',folder_name,'/slrnwmf.csv']);
+model1_slrn_full.save_csv(['../wykresy/ph/',folder_name,'/slrnwmf.csv']);
 % 
 fc.reset();
 fc.numeric = true;
@@ -84,7 +84,7 @@ fc.predict_lambdas = 0;
 fc.iterations = 1;
 fc.sim_model = WienerModel(1);
 model_mlrn_full_w = simulation(fc, Ysp,1);
-% model_mlrn_full_w.save_csv(['../wykresy/ph/',folder_name,'/mlrn.csv']);
+model_mlrn_full_w.save_csv(['../wykresy/ph/',folder_name,'/mlrn.csv']);
 % 
 fc.reset();
 fc.numeric = true;
@@ -92,7 +92,7 @@ fc.use_full_steering = true;
 fc.limit_output = false;
 fc.predict_lambdas = 0;
 fc.iterations = 1;
-fc.sim_model = Model(zeros(500,1));
+fc.main_model = Model(zeros(500,1));
 model1_n_real_model = simulation(fc, Ysp,1);
-% model1_n_real_model.save_csv(['../wykresy/ph/',folder_name,'/real.csv']);
+model1_n_real_model.save_csv(['../wykresy/ph/',folder_name,'/real.csv']);
 
