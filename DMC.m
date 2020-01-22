@@ -19,6 +19,7 @@ classdef DMC < handle
         params;
         output_limit;
         linear_model;
+        include_disturbance=0;
     end
     methods
         function obj=DMC(linear_model, N, Nu, D, lambda)
@@ -34,6 +35,7 @@ classdef DMC < handle
             obj.M = generateM(N, Nu, D, linear_model.s(:,1));
             obj.Mp1 = generateMp(N, D, linear_model.s(:,1));
             obj.Mp2 = generateMp(N, D, linear_model.s(:,2));
+            obj.Mp2 = [linear_model.s(1:N,2), obj.Mp2];
             obj.K = (obj.M' * obj.M + lambda * eye(Nu,Nu)) \ obj.M';
             obj.Ki = (obj.M' * obj.M + lambda * eye(Nu,Nu))^(-1);
             obj.KMp1 = obj.K(1,:)*obj.Mp1;
@@ -52,24 +54,26 @@ classdef DMC < handle
             obj.KMp2 = obj.K(1,:)*obj.Mp2;
             obj.K1sum = sum(obj.K(1,:));
         end
+        function obj = set_s2(obj, s2)
+            obj.Mp2 = generateMp(obj.N, obj.D, s2);
+            obj.KMp2 = obj.K(1,:)*obj.Mp2;
+        end
         function u_new = get_steering(obj, model, free_resp_override)
             D = obj.D;
             up = model.get_up(obj.D);
             Ysp = model.Ysp;
             y=model.y(model.k);
             dU1 = up(1:D-1,1)-up(2:D,1);
-            if size(up, 2) == 1
-                dU2 = 0*dU1;
+            if size(up, 2) == 1 || (~ obj.include_disturbance)
+                dU2 = [0;0*dU1];
             else
-                dU2 = up(1:D-1, 2) - up(2:D,2);
-            end
-            if model.k == 60
-                a=1;
-            end
-            if norm(dU2)>0
-                a=1
+                up2 = [model.u(model.k, 2);up(1:D, 2)];
+                dU2 = up2(1:D) - up2(2:D+1);
             end
             if nargin<3
+                if model.k == 50
+                    a=1
+                end
                 du = obj.K1sum*(Ysp(model.k) - y) - obj.KMp1*dU1 - obj.KMp2*dU2;
             else
                 du = obj.K(1,:)*(Ysp(model.k)*ones(obj.N,1) - free_resp_override(1:obj.N));

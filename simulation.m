@@ -6,18 +6,21 @@ if nargin<5
         params = Model2Params();
     end
 end
-if nargin<4
-    u_nominal = model.params.u_nominal;
-    u = repmat(u_nominal, [sim_len, 1]);
-else
-    u = dist;
-end
+
 if model_idx == 1
     model = Model(Ysp, params);
 else
     model = Model2(Ysp, params);
 end
 sim_len = length(model.Ysp);
+if nargin<4
+    u_nominal = model.params.u_nominal;
+    u = repmat(u_nominal, [sim_len, 1]);
+else
+    u = dist;
+end
+model.u(1:length(u), :) = u;
+
 % u_nominal = model.params.u_nominal;
 % u = repmat(u_nominal, [sim_len, 1]);
 for k=1:sim_len-1

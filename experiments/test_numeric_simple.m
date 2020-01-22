@@ -25,6 +25,9 @@ fc.update_lambdas([1, 0.5, 1, 0.2, 1]);
 fc.main_model.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
 Ysp = [5*ones(30,1); 8*ones(40,1); 4.5*ones(30,1)];
 folder_name = 'simple/la';
+
+
+
 model1_a = simulation(fc, Ysp,1);
 model1_a.plot();
 %model1_a.save_csv(['../wykresy/ph/',folder_name,'/analityczny.csv']);

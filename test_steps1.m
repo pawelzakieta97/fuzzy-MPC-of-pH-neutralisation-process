@@ -1,0 +1,11 @@
+params = ModelParams();
+u0 = params.u_nominal;
+u0(1) = 10.8;
+[~,y1,u] = step(u0, [0.1,0,0], 100, 1);
+% plot(y1);
+% hold on;
+u1 = u0;
+u1(1) = 11.85;
+u1(2) = u1(2)*0.8;
+[~,y2,u] = step(u1, [0,0.1,0], 100, 1);
+plot(y2(1:10));

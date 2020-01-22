@@ -18,72 +18,30 @@ fm.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
 fc.update_lambdas([1, 0.5, 1, 0.2, 1]);
 fc.main_model.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
 
-%Ysp = [5*ones(30,1); 8*ones(40,1); 4.5*ones(30,1)];
-Ysp = [7*ones(100,1)];
+fc.set_include_disturbance(0);
+Ysp = [4.5*ones(100,1)];
 params = ModelParams();
 u_nominal = repmat(params.u_nominal, [100,1]);
-u_nominal(50:100,2) = u_nominal(50:100,2)*5;
-model1_a = simulation(fc, Ysp,1, u_nominal, params);
+u_nominal(50:100,2) = u_nominal(50:100,2)*0.8;
+%model1_a = simulation(fc, Ysp,1, u_nominal, params);
 model1_a.plot();
-% 
-% fc.numeric = true;
-% fc.use_full_steering = false;
-% fc.multi_lin = false;
-% fc.predict_lambdas = 0;
-% fc.iterations = 0;
-% fc.sim_model = WienerModel(1);
-% model1_sl = simulation(fc, Ysp,1);
-% % model1_sl.save_csv(['../wykresy/ph/',folder_name,'/sl.csv']);
-% 
-% fc.reset();
-% fc.numeric = true;
-% fc.multi_lin = false;
-% fc.use_full_steering = true;
-% fc.predict_lambdas = 0;
-% fc.iterations = 1;
-% fc.sim_model = fm;
-% model1_slrn_fm = simulation(fc, Ysp,1);
-% % model1_slrn_fm.save_csv(['../wykresy/ph/',folder_name,'/slrnfm.csv']);
-% 
-% fc.main_model = WienerModel(1);
-% fc.reset();
-% fc.numeric = true;
-% fc.multi_lin = false;
-% fc.use_full_steering = true;
-% fc.predict_lambdas = 0;
-% fc.iterations = 0;
-% fc.sim_model = WienerModel(1);
-% model1_slrn = simulation(fc, Ysp,1);
-% % model1_slrn.plot();
-% %model1_slrn.save_csv(['../wykresy/ph/',folder_name,'/slrnwm.csv']);
-% 
-% fc.reset();
-% fc.numeric = true;
-% fc.multi_lin = false;
-% fc.use_full_steering = true;
-% fc.predict_lambdas = 0;
-% fc.iterations = 1;
-% fc.sim_model = WienerModel(1);
-% model1_slrn_full = simulation(fc, Ysp,1);
-% % model1_slrn_full.save_csv(['../wykresy/ph/',folder_name,'/slrnwmf.csv']);
-% % 
-% fc.reset();
-% fc.numeric = true;
-% fc.multi_lin = true;
-% fc.use_full_steering = true;
-% fc.predict_lambdas = 0;
-% fc.iterations = 1;
-% fc.sim_model = WienerModel(1);
-% model_mlrn_full_w = simulation(fc, Ysp,1);
-% % model_mlrn_full_w.save_csv(['../wykresy/ph/',folder_name,'/mlrn.csv']);
-% % 
-% fc.reset();
-% fc.numeric = true;
-% fc.use_full_steering = true;
-% fc.limit_output = false;
-% fc.predict_lambdas = 0;
-% fc.iterations = 1;
-% fc.sim_model = Model(zeros(500,1));
-% model1_n_real_model = simulation(fc, Ysp,1);
-% % model1_n_real_model.save_csv(['../wykresy/ph/',folder_name,'/real.csv']);
+
+fc.reset();
+fc.set_include_disturbance(1);
+
+params = ModelParams();
+%model1_a1 = simulation(fc, Ysp,1, u_nominal, params);
+model1_a1.plot();
+
+fc.linearize_sim_model = 1;
+fc.sim_model = WienerModel(1);
+%Ysp = [5*ones(30,1); 8*ones(40,1); 4.5*ones(30,1)];
+fc.lim_use_sim_model = 1;
+fc.limit_output = 1;
+fc.limit_type = 2;
+fc.lim_samples = 5;
+fc.output_limit = [4.4, 8.1];
+
+model_al1 = simulation(fc, Ysp,1, u_nominal, params);
+model_al1.plot();
 

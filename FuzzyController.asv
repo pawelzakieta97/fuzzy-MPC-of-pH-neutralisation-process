@@ -28,6 +28,8 @@ classdef FuzzyController < handle
         prev_prediction=0;
         d = 0;
         main_model;
+        include_disturbance = 1;
+        disturbance_model;
     end
     methods
         function obj = FuzzyController(controllers, membership_fun, fm, model_idx)
@@ -293,6 +295,18 @@ classdef FuzzyController < handle
             end
         end
         
+        function local_s2 = get_local_s2(obj, current_model)
+            total_weight = 0;
+            local_s2 = obj.controllers(1).linear_model.s1*0;
+            for i=1:length(obj.controllers)
+                weight = obj.membership_fun(obj.controllers(i), current_model);
+                obj.weights(current_model.k, i) = weight;
+                total_weight = total_weight + weight;
+                local_s2 = local_s2 + weight * obj.controllers(i).linear_model.s2;
+            end
+            local_s2 = local_s2/total_weight;
+        end
+        
         function y = get_free_response(obj, n)
             y = zeros(n, 1);
             u0 = obj.main_model.get_up(1);
@@ -346,16 +360,28 @@ classdef FuzzyController < handle
                         a=1;
                     end
                     obj.sim_model.copy_state(current_model);
+                    d = current_model.y(current_model.k) - obj.main_model.y(obj.main_model.k);
                     for t=1:obj.lim_samples+obj.params.output_delay
                         obj.sim_model.update(up(1,:));
+                        obj.main_model.update(up(1,:));
+                        obj.main_model.y(obj.main_model.k) = obj.main_model.y(obj.main_model.k) + d;
                         %future_local_s = obj.sim_model.get_local_s();
                         if obj.multi_lin
                             future_local_s = obj.get_local_s(obj.sim_model);
+                            future_local_s = obj.get_local_s(obj.main_model);
                             local_s(t) = future_local_s(t);
                         end
+                        obj.main_model.y(obj.main_model.k) = obj.main_model.y(obj.main_model.k) + d;
                     end
                     Y0real = obj.sim_model.y(current_model.k+1:current_model.k+obj.lim_samples+obj.params.output_delay);
                     Y0 = Y0real;
+                    
+                end
+                if obj.include_disturbance
+                    local_s2 = obj.get_local_s2(current_model);
+                    Mpz = generateMp(obj.lim_samples+obj.params.output_delay, D, local_s2);
+                    du2 = up(1:end-1, 2)-up(2:end, 2);
+                    Y0 = Y0 + Mpz*du2;
                 end
                 max_du = 99999;
                 min_du = -99999;
@@ -398,11 +424,23 @@ classdef FuzzyController < handle
             end
         end
         
+        function set_include_disturbance(obj, value)
+            for c_idx=1:length(obj.controllers)
+                obj.controllers(c_idx).include_disturbance = value;
+            end
+        end
+        
+        function set_s2(obj, s2)
+            for c_idx=1:length(obj.controllers)
+                obj.controllers(c_idx).set_s2(s2);
+            end
+        end
         function obj = update_lambdas(obj, lambdas)
             for i =1:length(lambdas)
                 obj.controllers(i).set_lambda(lambdas(i));
             end
         end
+        
         function obj = set_sigmas(obj, sigmas)
             for i=1:length(obj.controllers)
                 obj.controllers(i).linear_model.sigma = sigmas(i);
