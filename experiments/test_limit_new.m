@@ -7,20 +7,19 @@ op_points = [2.96, 4.76, 6.7, 8.19, 10]
 D = 80;
 N = D;
 Nu = 40;
-lambda_init = [0.1, 0.5, 1, 0.2, 10];
+lambda_init = [0.1,0.1,0.1,0.1,0.1];
+lambda_init = [1,1,1,1,1];
 
-step_size = 0.1;
-
+step_size = 0.05;
+sigmas = [0.3,0.5,0.3,0.5,0.3];
 [fc, fm] = get_fuzzy_controller(op_points, lambda_init, step_size, @normal, Nu, 1);
 fc.numeric = false;
-fc.set_sigmas([1,1,1,1,1]);
+fc.set_sigmas(sigmas);
 % fc.set_sigmas([1.1,0.38,1.2,0.43,1.53]);
 
-fc.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
-fm.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
-fc.main_model.set_sigmas([0.6,0.6,0.6,0.6,0.6]);
-fc.update_lambdas([0.2, 0.2, 0.2, 0.2, 0.2]);
-fc.update_lambdas([1, 0.5, 1, 0.2, 1]);
+fc.set_sigmas(sigmas);
+fm.set_sigmas(sigmas);
+fc.main_model.set_sigmas(sigmas);
 fc.sim_model = WienerModel(1);
 fc.numeric = 0;
 
@@ -33,7 +32,7 @@ fc.lim_use_sim_model = 0;
 fc.limit_output = 1;
 fc.limit_type = 2;
 fc.lim_samples = 1;
-fc.output_limit = [4.4, 8.1];
+fc.output_limit = [4.2, 8.3];
 
 model_al1 = simulation(fc, Ysp,1);
 model_al1.plot();
@@ -43,7 +42,7 @@ fc.limit_output = 1;
 fc.limit_type = 2;
 fc.lim_samples = 5;
 fc.lim_use_sim_model = 0;
-fc.output_limit = [4.4, 8.1];
+fc.output_limit = [4.2, 8.3];
 model_al5 = simulation(fc, Ysp,1);
 model_al5.plot();
 %model_al5.save_csv('../wykresy/ph/ograniczenia/a5.csv');
@@ -52,7 +51,7 @@ fc.limit_output = 1;
 fc.limit_type = 2;
 fc.lim_samples = 10;
 fc.lim_use_sim_model = 0;
-fc.output_limit = [4.4, 8.1];
+fc.output_limit = [4.2, 8.3];
 model_al10 = simulation(fc, Ysp,1);
 model_al10.plot();
 %model_al10.save_csv('../wykresy/ph/ograniczenia/a10.csv');

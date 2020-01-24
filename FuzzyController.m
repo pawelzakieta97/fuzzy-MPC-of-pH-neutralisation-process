@@ -341,7 +341,7 @@ classdef FuzzyController < handle
             if obj.limit_type ==1
                 lower_limit_dist = current_model.y(current_model.k)-lower_limit;
                 upper_limit_dist = upper_limit - current_model.y(current_model.k);
-                if lower_limit_dist<obj.lower_bandwidth || upper_limit_dist>obj.upper_bandwidth
+                if lower_limit_dist<obj.lower_bandwidth || upper_limit_dist<obj.upper_bandwidth
                     max_steering = obj.static_inv(upper_limit);
                     max_steering = max_steering(1);
                     min_steering = obj.static_inv(lower_limit);
