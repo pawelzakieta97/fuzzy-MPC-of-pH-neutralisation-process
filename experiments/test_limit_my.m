@@ -23,7 +23,7 @@ fc.main_model.set_sigmas(sigmas);
 fc.sim_model = WienerModel(1);
 fc.numeric = 0;
 
-Ysp = [5*ones(30,1); 8*ones(40,1); 4.5*ones(30,1)];
+Ysp = [5*ones(30,1); 8*ones(40,1); 4.5*ones(50,1)];
 model_a = simulation(fc, Ysp,1);
 model_a.plot();
 %model_a.save_csv('../wykresy/ph/ograniczenia/a.csv');
@@ -32,11 +32,12 @@ fc.lim_use_sim_model = 0;
 fc.limit_output = 1;
 fc.limit_type = 1;
 fc.lim_samples = 1;
-fc.upper_bandwidth = 0.3;
-fc.lower_bandwidth = 0.3;
+fc.upper_bandwidth = 0.5;
+fc.lower_bandwidth = 0.5;
 fc.output_limit = [4.2, 8.3];
-model_l = simulation(fc, Ysp, 1);
-model_l.plot();
+model_m03 = simulation(fc, Ysp, 1);
+model_m03.plot();
+model_m03.save_csv('../wykresy/ph/ograniczenia/my05.csv');
 
 fc.lim_use_sim_model = 0;
 fc.limit_output = 1;
@@ -45,26 +46,27 @@ fc.lim_samples = 1;
 fc.upper_bandwidth = 1;
 fc.lower_bandwidth = 1;
 fc.output_limit = [4.2, 8.3];
-model_l = simulation(fc, Ysp, 1);
-model_l.plot();
+model_m1 = simulation(fc, Ysp, 1);
+model_m1.plot();
+model_m1.save_csv('../wykresy/ph/ograniczenia/my1.csv');
 
 
-Ysp = [7*ones(30,1); 8*ones(40,1); 4.5*ones(30,1)];
+Ysp = [7*ones(10,1); 8*ones(20,1); 6.5*ones(20,1); 8*ones(20,1)];
 fc.limit_output = 0;
 model_a = simulation(fc, Ysp,1);
-
 model_a.plot();
-%model_a.save_csv('../wykresy/ph/ograniczenia/a.csv');
+model_a.save_csv('../wykresy/ph/ograniczenia/simple_a.csv');
 
 fc.lim_use_sim_model = 0;
 fc.limit_output = 1;
 fc.limit_type = 1;
 fc.lim_samples = 1;
-fc.upper_bandwidth = 0.3;
-fc.lower_bandwidth = 0.3;
+fc.upper_bandwidth = 0.5;
+fc.lower_bandwidth = 0.5;
 fc.output_limit = [4.2, 8.3];
-model_l2 = simulation(fc, Ysp, 1);
-model_l2.plot();
+model_m03s = simulation(fc, Ysp, 1);
+model_m03s.plot();
+model_m03s.save_csv('../wykresy/ph/ograniczenia/my05_simple.csv');
 
 fc.lim_use_sim_model = 0;
 fc.limit_output = 1;
@@ -73,5 +75,6 @@ fc.lim_samples = 1;
 fc.upper_bandwidth = 1;
 fc.lower_bandwidth = 1;
 fc.output_limit = [4.2, 8.3];
-model_l2 = simulation(fc, Ysp, 1);
-model_l2.plot();
+model_m1s = simulation(fc, Ysp, 1);
+model_m1s.plot();
+model_m1s.save_csv('../wykresy/ph/ograniczenia/my1_simple.csv');

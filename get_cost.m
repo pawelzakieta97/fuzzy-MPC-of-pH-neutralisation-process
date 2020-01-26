@@ -1,5 +1,6 @@
-function cost = get_cost(u1, N, sim_model, lambda, d)
-model = sim_model.clone();
+function cost = get_cost(u1, N, sim_model, lambda, k, d)
+model = sim_model;
+model.set_k(k);
 Nu = length(u1);
 u = repmat(model.params.u_nominal, [N, 1]);
 u(1:Nu, 1) = u1;

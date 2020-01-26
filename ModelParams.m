@@ -15,7 +15,6 @@ classdef ModelParams < handle
         Wa2 = -0.03;
         Wa3 = 0.003;
 
-
         Wb1 = 0.00005;
         Wb2 = 0.03;
         Wb3 = 0.0;

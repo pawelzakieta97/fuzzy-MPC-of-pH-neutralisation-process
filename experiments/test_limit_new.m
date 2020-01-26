@@ -7,7 +7,7 @@ op_points = [2.96, 4.76, 6.7, 8.19, 10]
 D = 80;
 N = D;
 Nu = 40;
-lambda_init = [0.1,0.1,0.1,0.1,0.1];
+%lambda_init = [0.5,0.5,0.5,0.5,0.5];
 lambda_init = [1,1,1,1,1];
 
 step_size = 0.05;
@@ -21,9 +21,12 @@ fc.set_sigmas(sigmas);
 fm.set_sigmas(sigmas);
 fc.main_model.set_sigmas(sigmas);
 fc.sim_model = WienerModel(1);
+fc.main_model = WienerModel(1);
+fc.dmc_disturbance = 1;
 fc.numeric = 0;
 
-Ysp = [5*ones(30,1); 8*ones(40,1); 4.5*ones(30,1)];
+Ysp = [5*ones(30,1); 8*ones(40,1); 4.5*ones(50,1)];
+%Ysp = [7*ones(10,1); 8*ones(20,1); 6.5*ones(20,1); 8*ones(20,1)];
 model_a = simulation(fc, Ysp,1);
 model_a.plot();
 %model_a.save_csv('../wykresy/ph/ograniczenia/a.csv');
@@ -40,7 +43,7 @@ model_al1.plot();
 
 fc.limit_output = 1;
 fc.limit_type = 2;
-fc.lim_samples = 5;
+fc.lim_samples = 2;
 fc.lim_use_sim_model = 0;
 fc.output_limit = [4.2, 8.3];
 model_al5 = simulation(fc, Ysp,1);
@@ -49,7 +52,7 @@ model_al5.plot();
 
 fc.limit_output = 1;
 fc.limit_type = 2;
-fc.lim_samples = 10;
+fc.lim_samples = 5;
 fc.lim_use_sim_model = 0;
 fc.output_limit = [4.2, 8.3];
 model_al10 = simulation(fc, Ysp,1);

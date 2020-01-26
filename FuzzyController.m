@@ -284,7 +284,11 @@ classdef FuzzyController < handle
         function local_s = get_local_s(obj, current_model)
             if obj.linearize_sim_model
                 obj.sim_model.copy_state(current_model);
+                %obj.main_model.set_k(current_model.k);
                 local_s = obj.sim_model.get_local_s();
+                %local_s = obj.main_model.get_local_s();
+                %D = obj.controllers(1).D;
+                %local_s(length(local_s):D) = local_s(length(local_s));
             else
                 total_weight = 0;
                 local_s = obj.controllers(1).linear_model.s1*0;
@@ -339,6 +343,18 @@ classdef FuzzyController < handle
             lower_limit = obj.output_limit(1);
             upper_limit = obj.output_limit(2);
             if obj.limit_type ==1
+                
+                if obj.include_disturbance
+                    z0 = obj.params.u_nominal(2);
+                    z = current_model.u(current_model.k,2);
+                    local_s2 = obj.get_local_s2(current_model);
+                    dist_static_shift = (z-z0)*local_s2(length(local_s2));
+                    if dist_static_shift < 0
+                        a=1
+                    end
+                    lower_limit = lower_limit-dist_static_shift;
+                    upper_limit = upper_limit - dist_static_shift;
+                end
                 lower_limit_dist = current_model.y(current_model.k)-lower_limit;
                 upper_limit_dist = upper_limit - current_model.y(current_model.k);
                 if lower_limit_dist<obj.lower_bandwidth || upper_limit_dist<obj.upper_bandwidth
@@ -374,7 +390,6 @@ classdef FuzzyController < handle
                                 future_local_s = obj.get_local_s(obj.main_model);
                             else
                                 future_local_s = obj.get_local_s(obj.sim_model);
-                                
                             end
                             %
                             local_s(t) = future_local_s(t);

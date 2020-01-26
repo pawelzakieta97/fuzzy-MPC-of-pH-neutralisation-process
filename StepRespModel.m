@@ -118,6 +118,21 @@ classdef StepRespModel < handle
                 up = up(1:length,:);
             end
         end
+        
+        function srm2 = clone(obj)
+            srm2 = StepRespModel([obj.s1,obj.s2], obj.step_size, obj.u0, obj.params);
+            srm2.op_point = obj.op_point;
+            srm2.s = obj.s;
+            srm2.s1 = obj.s1;
+            srm2.s2 = obj.s2;
+            srm2.k = obj.k;
+            srm2.u = obj.u;
+            srm2.y = obj.y;
+            srm2.Mp1 = obj.Mp1;
+            srm2.Mp2 = obj.Mp2;
+            srm2.amplification = obj.amplification;
+            srm2.sigma = obj.sigma;
+        end
     end
 end
             

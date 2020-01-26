@@ -73,7 +73,7 @@ classdef Model < handle
             stairs(obj.Ysp, '--');
             hold on;
             plot(obj.y(1:length(obj.Ysp)));
-            ylim([2,10]);
+            ylim([2,10.5]);
             legend('setpoint', 'output', 'Location','southeast');
             xlabel('t');
             hold off;

@@ -14,42 +14,43 @@ classdef WienerModel < StepRespModel
     end
     methods
         function obj = WienerModel(model_idx, params)
-            
-            if model_idx == 1 || nargin<1
-                model_idx = 1;
-                step_size = 0.01;
-                if nargin<2
-                    params = ModelParams();
-                end
-            else
-                if model_idx == 2
-                    step_size = 0.001;
+            %if nargin<3
+                if model_idx == 1 || nargin<1
+                    model_idx = 1;
+                    step_size = 0.01;
                     if nargin<2
-                        params = Model2Params();
+                        params = ModelParams();
+                    end
+                else
+                    if model_idx == 2
+                        step_size = 0.001;
+                        if nargin<2
+                            params = Model2Params();
+                        end
                     end
                 end
-            end
-            [~,s,~] = step(params.u_nominal, step_size, 80, model_idx);
-            amp = s(length(s))-s(1);
-            obj = obj@StepRespModel(s, amp, params.u_nominal, params);
-            obj.y_in = obj.params.u_nominal(1) *ones(500,1);
-            obj.model_idx = model_idx;
-            % wyznaczanie charakterystyki statycznej
-            samples = 1000;
-            u = repmat(params.u_nominal, [samples, 1]);
-            u(:,1) = [1:samples]/samples*(params.u_max(1)-params.u_min(1))+params.u_min(1);
-            obj.static_char = zeros(samples,1);
-            if obj.model_idx == 1
-                % obj.fis = readfis('static1.fis');
-                for k =1:samples
-                    [~,obj.static_char(k)] = static_output(u(k,:), params);
+                [~,s,~] = step(params.u_nominal, step_size, 80, model_idx);
+                amp = s(length(s))-s(1);
+                obj = obj@StepRespModel(s, amp, params.u_nominal, params);
+                obj.y_in = obj.params.u_nominal(1) *ones(500,1);
+                obj.model_idx = model_idx;
+                % wyznaczanie charakterystyki statycznej
+                samples = 1000;
+                u = repmat(params.u_nominal, [samples, 1]);
+                u(:,1) = [1:samples]/samples*(params.u_max(1)-params.u_min(1))+params.u_min(1);
+                obj.static_char = zeros(samples,1);
+                if obj.model_idx == 1
+                    % obj.fis = readfis('static1.fis');
+                    for k =1:samples
+                        [~,obj.static_char(k)] = static_output(u(k,:), params);
+                    end
+                else
+                    m = Model2();
+                    for k =1:samples
+                        [~,obj.static_char(k)] = m.static_output(u(k,:));
+                    end 
                 end
-            else
-                m = Model2();
-                for k =1:samples
-                    [~,obj.static_char(k)] = m.static_output(u(k,:));
-                end 
-            end
+            %end
         end
         function y = static_out(obj, u)
             y = evalfis(u,obj.fis);
@@ -133,7 +134,7 @@ classdef WienerModel < StepRespModel
             obj.k = k;
         end
         function wm = clone(obj)
-            wm = WienerModel(obj.model_idx);
+            wm = WienerModel(obj.model_idx, obj.params, 0);
             wm.copy_state(obj);
         end
         
